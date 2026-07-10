@@ -1,4 +1,6 @@
+import { useTranslation } from 'react-i18next'
 import type { Project } from '../api'
+import { LanguageToggle } from './LanguageToggle'
 
 interface ProjectSelectProps {
   projects: Project[]
@@ -7,11 +9,16 @@ interface ProjectSelectProps {
 }
 
 export function ProjectSelect({ projects, onSelect, onOpenWizard }: ProjectSelectProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="user-select">
+      <div className="login-lang">
+        <LanguageToggle full />
+      </div>
       <div className="user-select-panel">
         <h1>Renovatie</h1>
-        <p className="muted">Pick a project to work on.</p>
+        <p className="muted">{t('projectSelect.subtitle')}</p>
         <div className="user-select-list">
           {projects.map((project) => (
             <button
@@ -25,9 +32,9 @@ export function ProjectSelect({ projects, onSelect, onOpenWizard }: ProjectSelec
             </button>
           ))}
         </div>
-        {projects.length === 0 && <p className="muted">No projects yet — create your first one.</p>}
+        {projects.length === 0 && <p className="muted">{t('projectSelect.empty')}</p>}
         <button type="button" className="primary" onClick={onOpenWizard}>
-          + New project
+          {t('projectSelect.newProject')}
         </button>
       </div>
     </div>

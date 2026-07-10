@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Feature, PBI, Project, Room, Status, User } from './api'
 import { api } from './api'
 import { Backlog } from './components/Backlog'
+import { LanguageToggle } from './components/LanguageToggle'
 import { Board } from './components/Board'
 import { CostDashboard } from './components/CostDashboard'
 import { CostModal } from './components/CostModal'
@@ -23,6 +25,7 @@ const CURRENT_PROJECT_KEY = 'renovatie.currentProjectId'
 const SIDEBAR_OPEN_KEY = 'renovatie.sidebarOpen'
 
 function App() {
+  const { t } = useTranslation()
   const [projects, setProjects] = useState<Project[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
   const [features, setFeatures] = useState<Feature[]>([])
@@ -101,9 +104,9 @@ function App() {
     refresh()
       .then(() => setLoaded(true))
       .catch((e: unknown) =>
-        setError(e instanceof Error ? e.message : 'Could not reach the backend'),
+        setError(e instanceof Error ? e.message : t('errors.backendUnreachable')),
       )
-  }, [refresh])
+  }, [refresh, t])
 
   const run = useCallback(
     async (action: () => Promise<unknown>) => {
@@ -112,11 +115,11 @@ function App() {
         await action()
         await refresh()
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Something went wrong')
+        setError(e instanceof Error ? e.message : t('errors.generic'))
         await refresh().catch(() => undefined)
       }
     },
-    [refresh],
+    [refresh, t],
   )
 
   const toggleTask = useCallback(
@@ -207,11 +210,9 @@ function App() {
   }, [loaded, users, assigneeFilter])
 
   const activeRoomNames = rooms.filter((r) => roomFilter.includes(r.id)).map((r) => r.name)
-  const activeFeatureNames = features
-    .filter((f) => featureFilter.includes(f.id))
-    .map((f) => f.name)
+  const activeFeatureNames = features.filter((f) => featureFilter.includes(f.id)).map((f) => f.name)
   const activeAssigneeNames = assigneeFilter.map((f) =>
-    f === 'unassigned' ? 'Unassigned' : (users.find((u) => u.id === f)?.name ?? ''),
+    f === 'unassigned' ? t('common.unassigned') : (users.find((u) => u.id === f)?.name ?? ''),
   )
 
   const errorBanner = error && (
@@ -227,7 +228,7 @@ function App() {
     return (
       <div className="app">
         {errorBanner}
-        <p className="loading">Loading…</p>
+        <p className="loading">{t('common.loading')}</p>
       </div>
     )
   }
@@ -289,7 +290,7 @@ function App() {
           <button
             type="button"
             className="brand-name"
-            title="Switch project"
+            title={t('app.switchProject')}
             onClick={() => selectProject(null)}
           >
             {currentProject.name}
@@ -314,47 +315,48 @@ function App() {
             className={view === 'board' ? 'active' : ''}
             onClick={() => setView('board')}
           >
-            Board
+            {t('nav.board')}
           </button>
           <button
             type="button"
             className={view === 'backlog' ? 'active' : ''}
             onClick={() => setView('backlog')}
           >
-            Backlog
+            {t('nav.backlog')}
           </button>
           <button
             type="button"
             className={view === 'dashboard' ? 'active' : ''}
             onClick={() => setView('dashboard')}
           >
-            Dashboard
+            {t('nav.dashboard')}
           </button>
           <button
             type="button"
             className={view === 'costs' ? 'active' : ''}
             onClick={() => setView('costs')}
           >
-            Costs
+            {t('nav.costs')}
           </button>
         </nav>
         <div className="topbar-actions">
+          <LanguageToggle />
           <button
             type="button"
             className="current-user"
-            title="Switch user"
+            title={t('app.switchUser')}
             onClick={() => selectUser(null)}
           >
             <span className="avatar">{currentUser.name.charAt(0).toUpperCase()}</span>
             <span className="current-user-name">{currentUser.name}</span>
           </button>
           <button type="button" className="primary" onClick={() => setShowNewPbi(true)}>
-            + New PBI
+            {t('app.newPbi')}
           </button>
           <button
             type="button"
             className="icon-button gear-button"
-            title="Project settings"
+            title={t('app.projectSettings')}
             onClick={() => setShowConfig(true)}
           >
             ⚙
@@ -409,8 +411,8 @@ function App() {
           <main className="board-area">
             {loaded && rooms.length === 0 && pbis.length === 0 ? (
               <div className="empty-state">
-                <h2>Welcome to {currentProject.name}</h2>
-                <p>Open the project settings (⚙ top right) to add rooms, then create your first PBI.</p>
+                <h2>{t('app.welcome', { name: currentProject.name })}</h2>
+                <p>{t('app.welcomeHint')}</p>
               </div>
             ) : view === 'backlog' ? (
               <Backlog

@@ -1,0 +1,235 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "close": "Close",
+    "cancel": "Cancel",
+    "create": "Create",
+    "save": "Save",
+    "delete": "Delete",
+    "open": "Open",
+    "back": "Back",
+    "next": "Next",
+    "name": "Name",
+    "title": "Title",
+    "description": "Description",
+    "status": "Status",
+    "room": "Room",
+    "rooms": "Rooms",
+    "feature": "Feature",
+    "features": "Features",
+    "people": "People",
+    "tasks": "Tasks",
+    "costs": "Costs",
+    "assignee": "Assignee",
+    "unassigned": "Unassigned",
+    "none": "— none —",
+    "removeItem": "Remove {{name}}"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "nl": "Nederlands"
+  },
+  "status": {
+    "todo": "Backlog",
+    "committed": "Committed",
+    "in_progress": "In Progress",
+    "done": "Done"
+  },
+  "errors": {
+    "backendUnreachable": "Could not reach the backend",
+    "generic": "Something went wrong"
+  },
+  "app": {
+    "switchProject": "Switch project",
+    "switchUser": "Switch user",
+    "newPbi": "+ New PBI",
+    "projectSettings": "Project settings",
+    "welcome": "Welcome to {{name}}",
+    "welcomeHint": "Open the project settings (⚙ top right) to add rooms, then create your first PBI."
+  },
+  "nav": {
+    "board": "Board",
+    "backlog": "Backlog",
+    "dashboard": "Dashboard",
+    "costs": "Costs"
+  },
+  "projectSelect": {
+    "subtitle": "Pick a project to work on.",
+    "empty": "No projects yet — create your first one.",
+    "newProject": "+ New project"
+  },
+  "userSelect": {
+    "subtitle": "Who is working on the renovation today?",
+    "empty": "No users yet — add yourself below.",
+    "addPlaceholder": "Add a new user…",
+    "switchProject": "← Switch project"
+  },
+  "sidebar": {
+    "filters": "Filters",
+    "showFilters": "Show filters",
+    "hideFilters": "Hide filters",
+    "allRooms": "All rooms",
+    "allFeatures": "All features",
+    "everyone": "Everyone"
+  },
+  "board": {
+    "showColumn": "Show {{column}}",
+    "hideColumn": "Hide {{column}}",
+    "tasksCount": "{{done}}/{{total}} tasks",
+    "spentPlanned": "Spent / planned"
+  },
+  "backlog": {
+    "emptyFiltered": "No work items match the current filters.",
+    "searchPlaceholder": "Filter by name…",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items",
+    "itemCountFiltered": "{{shown}} of {{total}} items",
+    "workItem": "Work item",
+    "noMatch": "No work items match “{{query}}”."
+  },
+  "dashboard": {
+    "greetingNight": "Good night, {{name}}",
+    "greetingMorning": "Good morning, {{name}}",
+    "greetingAfternoon": "Good afternoon, {{name}}",
+    "greetingEvening": "Good evening, {{name}}",
+    "percentDone": "{{percent}}% of PBIs done",
+    "pbisDone": "{{done}} of {{total}} PBIs done",
+    "openTasks_one": "{{count}} open task",
+    "openTasks_other": "{{count}} open tasks",
+    "assignedToYou": "{{count}} assigned to you",
+    "tileAssigned": "Assigned to you",
+    "tileAssignedHint": "open PBIs",
+    "tileOpenTasks": "Your open tasks",
+    "tileOpenTasksHint": "across all PBIs",
+    "tileInProgress": "In progress",
+    "tileInProgressHint": "PBIs house-wide",
+    "tileUnassigned": "Unassigned",
+    "tileUnassignedHint": "open PBIs, no owner",
+    "byStatus": "PBIs by status",
+    "noPbis": "No PBIs yet.",
+    "noPbisShort": "No PBIs yet",
+    "workload": "Workload by person",
+    "noRooms": "No rooms yet — add one in the project settings."
+  },
+  "costs": {
+    "title": "Renovation costs",
+    "spentOfPlanned": "{{spent}} spent of {{planned}} planned",
+    "percentOfPlanned": "{{percent}}% of {{planned}} planned",
+    "itemsPurchased_one": "{{purchased}} of {{count}} item purchased",
+    "itemsPurchased_other": "{{purchased}} of {{count}} items purchased",
+    "tilePlanned": "Planned",
+    "tilePlannedHint": "all cost items",
+    "tileSpent": "Spent",
+    "tileSpentHint": "purchased items",
+    "tileRemaining": "Still to buy",
+    "tileRemainingHint": "open items",
+    "tilePurchased": "Purchased",
+    "tilePurchasedHint": "items checked off",
+    "perRoom": "Cost per room",
+    "emptyPie": "No costs yet — add them on a PBI.",
+    "noRoomsSelected": "No rooms selected — tick a room to include it.",
+    "noAmounts": "No amounts yet for the selected rooms.",
+    "sliceTip": "{{label}} — {{planned}} planned · {{spent}} spent",
+    "otherRooms": "Other ({{count}} rooms)",
+    "otherNote": "The smallest rooms are grouped as one gray “Other” slice.",
+    "purchaseList": "Purchase list",
+    "filterAllItems": "All items",
+    "stillToBuy": "Still to buy",
+    "purchased": "Purchased",
+    "item": "Item",
+    "estimated": "Estimated",
+    "actual": "Actual",
+    "markPurchased": "Mark as purchased",
+    "markNotPurchased": "Mark as not purchased",
+    "totalItems_one": "Total ({{count}} item)",
+    "totalItems_other": "Total ({{count}} items)",
+    "plannedLower": "planned"
+  },
+  "tasks": {
+    "reopen": "Reopen task",
+    "markDone": "Mark task done"
+  },
+  "pbi": {
+    "modalTitle": "PBI #{{id}}",
+    "costsTotal": "{{spent}} spent / {{planned}} planned",
+    "noCosts": "No costs yet.",
+    "addCostPlaceholder": "Add a cost or purchase…",
+    "estPlaceholder": "€ est.",
+    "noTasks": "No tasks yet.",
+    "addTaskPlaceholder": "Add a task…",
+    "delete": "Delete PBI"
+  },
+  "task": {
+    "modalTitle": "Task #{{id}}",
+    "delete": "Delete task"
+  },
+  "cost": {
+    "modalTitle": "Cost #{{id}}",
+    "what": "What",
+    "why": "Why",
+    "whyPlaceholder": "Why is this purchase needed?",
+    "estimatedLabel": "Estimated cost (€)",
+    "actualLabel": "Actual cost (€)",
+    "delete": "Delete cost"
+  },
+  "feature": {
+    "modalTitle": "Feature #{{id}}"
+  },
+  "comments": {
+    "title": "Comments",
+    "empty": "No comments yet — start the discussion.",
+    "formerUser": "Former user",
+    "delete": "Delete comment",
+    "placeholder": "Write a comment… (markdown supported)",
+    "addImage": "🖼 Add image",
+    "submit": "Comment",
+    "loadError": "Could not load comments",
+    "postError": "Could not post comment",
+    "deleteError": "Could not delete comment",
+    "uploadError": "Could not upload image"
+  },
+  "newPbi": {
+    "title": "New PBI",
+    "needRoom": "Add a room in the project settings first — every PBI belongs to a room.",
+    "titlePlaceholder": "e.g. Tile the bathroom floor"
+  },
+  "wizard": {
+    "title": "New project",
+    "whatRenovating": "What are you renovating?",
+    "projectNamePlaceholder": "Project name…",
+    "roomsHint": "Add the rooms you will work on. You can always add more later.",
+    "whoJoining": "Who is joining this project?",
+    "newTag": "(new)",
+    "addUserPlaceholder": "Add new user…",
+    "creating": "Creating…",
+    "createProject": "Create project",
+    "createError": "Could not create the project"
+  },
+  "config": {
+    "project": "Project",
+    "projectName": "Project name",
+    "pbiCount_one": "{{count}} PBI",
+    "pbiCount_other": "{{count}} PBIs",
+    "addRoomPlaceholder": "Add room…",
+    "addFeaturePlaceholder": "Add feature…",
+    "admin": "Admin",
+    "adminBadge": "admin",
+    "removeFromProject": "Remove from project",
+    "deleteUser": "Delete user",
+    "addExistingUser": "Add existing user…",
+    "createUserPlaceholder": "Create new user…",
+    "dangerZone": "Danger zone",
+    "dangerText": "Deleting this project permanently removes all its rooms, features, PBIs, tasks, costs and comments. Type <bold>{{name}}</bold> to confirm.",
+    "deleteProject": "Delete project",
+    "rename": "Rename",
+    "roomHasPbis_one": "\"{{name}}\" still has {{count}} PBI; move or delete it first.",
+    "roomHasPbis_other": "\"{{name}}\" still has {{count}} PBIs; move or delete them first.",
+    "confirmDeleteRoom": "Delete room \"{{name}}\"?",
+    "confirmDeleteFeature": "Delete feature \"{{name}}\"?",
+    "featurePbisNote_one": " {{count}} PBI will keep existing without a feature.",
+    "featurePbisNote_other": " {{count}} PBIs will keep existing without a feature.",
+    "confirmRemoveMember": "Remove {{name}} from this project? Their assignments in this project will be cleared.",
+    "confirmDeleteUser": "Delete {{name}} everywhere? They will be removed from all projects and unassigned from all work."
+  }
+}

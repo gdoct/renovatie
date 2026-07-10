@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Project, User } from '../api'
 import { api } from '../api'
 import { Modal } from './Modal'
@@ -9,9 +10,10 @@ interface NewProjectWizardProps {
   onClose: () => void
 }
 
-const STEPS = ['Name', 'Rooms', 'People'] as const
+const STEPS = ['common.name', 'common.rooms', 'common.people'] as const
 
 export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
+  const { t } = useTranslation()
   const [step, setStep] = useState(0)
   const [name, setName] = useState('')
   const [rooms, setRooms] = useState<string[]>([])
@@ -69,29 +71,29 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
       }
       onDone(project)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not create the project')
+      setError(e instanceof Error ? e.message : t('wizard.createError'))
       setSaving(false)
     }
   }
 
   return (
-    <Modal title="New project" onClose={onClose}>
+    <Modal title={t('wizard.title')} onClose={onClose}>
       <div className="wizard">
         <div className="wizard-steps">
-          {STEPS.map((label, index) => (
-            <span key={label} className={`wizard-step${index === step ? ' active' : ''}`}>
-              {index + 1}. {label}
+          {STEPS.map((labelKey, index) => (
+            <span key={labelKey} className={`wizard-step${index === step ? ' active' : ''}`}>
+              {index + 1}. {t(labelKey)}
             </span>
           ))}
         </div>
 
         {step === 0 && (
           <div className="wizard-body">
-            <p className="muted">What are you renovating?</p>
+            <p className="muted">{t('wizard.whatRenovating')}</p>
             <input
               autoFocus
               value={name}
-              placeholder="Project name…"
+              placeholder={t('wizard.projectNamePlaceholder')}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
@@ -99,7 +101,7 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
 
         {step === 1 && (
           <div className="wizard-body">
-            <p className="muted">Add the rooms you will work on. You can always add more later.</p>
+            <p className="muted">{t('wizard.roomsHint')}</p>
             <ul className="wizard-list">
               {rooms.map((room) => (
                 <li key={room}>
@@ -107,7 +109,7 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
                   <button
                     type="button"
                     className="icon-button"
-                    title={`Remove ${room}`}
+                    title={t('common.removeItem', { name: room })}
                     onClick={() => setRooms(rooms.filter((r) => r !== room))}
                   >
                     ✕
@@ -119,7 +121,7 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
               <input
                 autoFocus
                 value={roomDraft}
-                placeholder="Add room…"
+                placeholder={t('config.addRoomPlaceholder')}
                 onChange={(e) => setRoomDraft(e.target.value)}
               />
               <button type="submit" disabled={!roomDraft.trim()}>
@@ -131,7 +133,7 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
 
         {step === 2 && (
           <div className="wizard-body">
-            <p className="muted">Who is joining this project?</p>
+            <p className="muted">{t('wizard.whoJoining')}</p>
             {globalUsers.length > 0 && (
               <div className="wizard-user-list">
                 {globalUsers.map((user) => (
@@ -149,11 +151,11 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
             <ul className="wizard-list">
               {newUsers.map((userName) => (
                 <li key={userName}>
-                  {userName} <span className="muted">(new)</span>
+                  {userName} <span className="muted">{t('wizard.newTag')}</span>
                   <button
                     type="button"
                     className="icon-button"
-                    title={`Remove ${userName}`}
+                    title={t('common.removeItem', { name: userName })}
                     onClick={() => setNewUsers(newUsers.filter((u) => u !== userName))}
                   >
                     ✕
@@ -164,7 +166,7 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
             <form className="add-form" onSubmit={addUser}>
               <input
                 value={userDraft}
-                placeholder="Add new user…"
+                placeholder={t('wizard.addUserPlaceholder')}
                 onChange={(e) => setUserDraft(e.target.value)}
               />
               <button type="submit" disabled={!userDraft.trim()}>
@@ -179,7 +181,7 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
         <div className="modal-actions">
           {step > 0 && (
             <button type="button" onClick={() => setStep(step - 1)} disabled={saving}>
-              Back
+              {t('common.back')}
             </button>
           )}
           {step < STEPS.length - 1 ? (
@@ -189,7 +191,7 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
               onClick={() => setStep(step + 1)}
               disabled={!name.trim()}
             >
-              Next
+              {t('common.next')}
             </button>
           ) : (
             <button
@@ -198,7 +200,7 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
               onClick={() => void finish()}
               disabled={!name.trim() || saving}
             >
-              {saving ? 'Creating…' : 'Create project'}
+              {saving ? t('wizard.creating') : t('wizard.createProject')}
             </button>
           )}
         </div>

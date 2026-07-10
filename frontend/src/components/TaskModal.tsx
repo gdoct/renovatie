@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Status, Task, User } from '../api'
-import { STATUSES, STATUS_LABELS } from '../api'
+import { STATUSES } from '../api'
 import { CommentSection } from './CommentSection'
 import { Modal } from './Modal'
 
@@ -26,6 +27,7 @@ export function TaskModal({
   onDelete,
   onClose,
 }: TaskModalProps) {
+  const { t } = useTranslation()
   const [title, setTitle] = useState(task.title)
   const [description, setDescription] = useState(task.description)
 
@@ -46,14 +48,14 @@ export function TaskModal({
   }
 
   return (
-    <Modal title={`Task #${task.id}`} onClose={onClose}>
+    <Modal title={t('task.modalTitle', { id: task.id })} onClose={onClose}>
       <div className="modal-form">
         <label>
-          Title
+          {t('common.title')}
           <input value={title} onChange={(e) => setTitle(e.target.value)} onBlur={saveText} />
         </label>
         <label>
-          Description
+          {t('common.description')}
           <textarea
             value={description}
             rows={3}
@@ -63,20 +65,20 @@ export function TaskModal({
         </label>
         <div className="form-row">
           <label>
-            Status
+            {t('common.status')}
             <select
               value={task.status}
               onChange={(e) => onUpdate({ status: e.target.value as Status })}
             >
               {STATUSES.map((status) => (
                 <option key={status} value={status}>
-                  {STATUS_LABELS[status]}
+                  {t(`status.${status}`)}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            Assignee
+            {t('common.assignee')}
             <select
               value={task.assignee_id ?? ''}
               onChange={(e) =>
@@ -85,7 +87,7 @@ export function TaskModal({
                 })
               }
             >
-              <option value="">Unassigned</option>
+              <option value="">{t('common.unassigned')}</option>
               {users.map((user) => (
                 <option key={user.id} value={user.id}>
                   {user.name}
@@ -102,10 +104,10 @@ export function TaskModal({
         />
         <div className="modal-actions">
           <button type="button" className="danger" onClick={onDelete}>
-            Delete task
+            {t('task.delete')}
           </button>
           <button type="button" className="primary" onClick={onClose}>
-            Close
+            {t('common.close')}
           </button>
         </div>
       </div>

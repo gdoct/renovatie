@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Cost, Feature, PBI, Room, Status, Task, User } from '../api'
-import { costAmount, formatEuro, STATUSES, STATUS_LABELS } from '../api'
+import { costAmount, formatEuro, STATUSES } from '../api'
 import { CommentSection } from './CommentSection'
 import { Modal } from './Modal'
 
@@ -45,6 +46,7 @@ export function PBIModal({
   onSelectCost,
   onClose,
 }: PBIModalProps) {
+  const { t } = useTranslation()
   const [title, setTitle] = useState(pbi.title)
   const [description, setDescription] = useState(pbi.description)
   const [newTask, setNewTask] = useState('')
@@ -91,14 +93,14 @@ export function PBIModal({
   const planned = pbi.costs.reduce((sum, c) => sum + costAmount(c), 0)
 
   return (
-    <Modal title={`PBI #${pbi.id}`} onClose={onClose}>
+    <Modal title={t('pbi.modalTitle', { id: pbi.id })} onClose={onClose}>
       <div className="modal-form">
         <label>
-          Title
+          {t('common.title')}
           <input value={title} onChange={(e) => setTitle(e.target.value)} onBlur={saveText} />
         </label>
         <label>
-          Description
+          {t('common.description')}
           <textarea
             value={description}
             rows={3}
@@ -108,20 +110,20 @@ export function PBIModal({
         </label>
         <div className="form-row">
           <label>
-            Status
+            {t('common.status')}
             <select
               value={pbi.status}
               onChange={(e) => onUpdate({ status: e.target.value as Status })}
             >
               {STATUSES.map((status) => (
                 <option key={status} value={status}>
-                  {STATUS_LABELS[status]}
+                  {t(`status.${status}`)}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            Room
+            {t('common.room')}
             <select
               value={pbi.room_id}
               onChange={(e) => onUpdate({ room_id: Number(e.target.value) })}
@@ -134,7 +136,7 @@ export function PBIModal({
             </select>
           </label>
           <label>
-            Feature
+            {t('common.feature')}
             <select
               value={pbi.feature_id ?? ''}
               onChange={(e) =>
@@ -143,7 +145,7 @@ export function PBIModal({
                 })
               }
             >
-              <option value="">— none —</option>
+              <option value="">{t('common.none')}</option>
               {features.map((feature) => (
                 <option key={feature.id} value={feature.id}>
                   {feature.name}
@@ -152,7 +154,7 @@ export function PBIModal({
             </select>
           </label>
           <label>
-            Assignee
+            {t('common.assignee')}
             <select
               value={pbi.assignee_id ?? ''}
               onChange={(e) =>
@@ -161,7 +163,7 @@ export function PBIModal({
                 })
               }
             >
-              <option value="">Unassigned</option>
+              <option value="">{t('common.unassigned')}</option>
               {users.map((user) => (
                 <option key={user.id} value={user.id}>
                   {user.name}
@@ -173,14 +175,14 @@ export function PBIModal({
 
         <section className="tasks costs">
           <h3>
-            Costs
+            {t('common.costs')}
             {pbi.costs.length > 0 && (
               <span className="costs-total">
-                {formatEuro(spent)} spent / {formatEuro(planned)} planned
+                {t('pbi.costsTotal', { spent: formatEuro(spent), planned: formatEuro(planned) })}
               </span>
             )}
           </h3>
-          {pbi.costs.length === 0 && <p className="muted">No costs yet.</p>}
+          {pbi.costs.length === 0 && <p className="muted">{t('pbi.noCosts')}</p>}
           {pbi.costs.map((cost) => (
             <CostRow
               key={cost.id}
@@ -192,14 +194,14 @@ export function PBIModal({
           <form className="add-form" onSubmit={submitCost}>
             <input
               value={newCost}
-              placeholder="Add a cost or purchase…"
+              placeholder={t('pbi.addCostPlaceholder')}
               onChange={(e) => setNewCost(e.target.value)}
             />
             <input
               className="add-form-amount"
               inputMode="decimal"
               value={newCostEstimate}
-              placeholder="€ est."
+              placeholder={t('pbi.estPlaceholder')}
               onChange={(e) => setNewCostEstimate(e.target.value)}
             />
             <button type="submit" disabled={!newCost.trim()}>
@@ -209,8 +211,8 @@ export function PBIModal({
         </section>
 
         <section className="tasks">
-          <h3>Tasks</h3>
-          {pbi.tasks.length === 0 && <p className="muted">No tasks yet.</p>}
+          <h3>{t('common.tasks')}</h3>
+          {pbi.tasks.length === 0 && <p className="muted">{t('pbi.noTasks')}</p>}
           {pbi.tasks.map((task) => (
             <TaskRow
               key={task.id}
@@ -223,7 +225,7 @@ export function PBIModal({
           <form className="add-form" onSubmit={submitTask}>
             <input
               value={newTask}
-              placeholder="Add a task…"
+              placeholder={t('pbi.addTaskPlaceholder')}
               onChange={(e) => setNewTask(e.target.value)}
             />
             <button type="submit" disabled={!newTask.trim()}>
@@ -241,10 +243,10 @@ export function PBIModal({
 
         <div className="modal-actions">
           <button type="button" className="danger" onClick={onDelete}>
-            Delete PBI
+            {t('pbi.delete')}
           </button>
           <button type="button" className="primary" onClick={onClose}>
-            Close
+            {t('common.close')}
           </button>
         </div>
       </div>
@@ -259,19 +261,23 @@ interface CostRowProps {
 }
 
 function CostRow({ cost, onToggle, onOpen }: CostRowProps) {
+  const { t } = useTranslation()
   return (
     <div className={`task-row cost-row${cost.purchased ? ' cost-purchased' : ''}`}>
       <input
         type="checkbox"
         className="task-check cost-check"
         checked={cost.purchased}
-        title={cost.purchased ? 'Mark as not purchased' : 'Mark as purchased'}
+        title={cost.purchased ? t('costs.markNotPurchased') : t('costs.markPurchased')}
         onChange={(e) => onToggle(e.target.checked)}
       />
       <button type="button" className="task-title cost-title task-open" onClick={onOpen}>
         {cost.title}
       </button>
-      <span className="cost-amount" title={cost.actual_cost !== null ? 'Actual' : 'Estimated'}>
+      <span
+        className="cost-amount"
+        title={cost.actual_cost !== null ? t('costs.actual') : t('costs.estimated')}
+      >
         {cost.actual_cost === null && cost.estimated_cost !== null && '~'}
         {formatEuro(costAmount(cost))}
       </span>
@@ -287,6 +293,7 @@ interface TaskRowProps {
 }
 
 function TaskRow({ task, users, onToggle, onOpen }: TaskRowProps) {
+  const { t } = useTranslation()
   const assignee = users.find((u) => u.id === task.assignee_id)
 
   return (
@@ -295,13 +302,15 @@ function TaskRow({ task, users, onToggle, onOpen }: TaskRowProps) {
         type="checkbox"
         className="task-check"
         checked={task.status === 'done'}
-        title={task.status === 'done' ? 'Reopen task' : 'Mark task done'}
+        title={task.status === 'done' ? t('tasks.reopen') : t('tasks.markDone')}
         onChange={(e) => onToggle(e.target.checked)}
       />
       <button type="button" className="task-title task-open" onClick={onOpen}>
         {task.title}
       </button>
-      {task.status === 'in_progress' && <span className="badge badge-progress">In progress</span>}
+      {task.status === 'in_progress' && (
+        <span className="badge badge-progress">{t('status.in_progress')}</span>
+      )}
       {assignee && (
         <span className="avatar avatar-sm" title={assignee.name}>
           {assignee.name.charAt(0).toUpperCase()}

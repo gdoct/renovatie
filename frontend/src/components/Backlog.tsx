@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Feature, PBI, Room, Status, User } from '../api'
-import { comparePriority, costAmount, formatEuro, STATUSES, STATUS_LABELS } from '../api'
+import { comparePriority, costAmount, formatEuro, STATUSES } from '../api'
 
 interface BacklogProps {
   pbis: PBI[]
@@ -65,6 +66,7 @@ export function Backlog({
   onAssign,
   onSelect,
 }: BacklogProps) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<SortState>({ key: 'priority', dir: 1 })
 
@@ -72,19 +74,17 @@ export function Backlog({
     const byPriority = [...pbis].sort(comparePriority)
     const needle = query.trim().toLowerCase()
     const filtered = byPriority
-      .map(
-        (pbi, index): BacklogRow => ({
-          pbi,
-          rank: index + 1,
-          roomName: rooms.find((r) => r.id === pbi.room_id)?.name ?? '',
-          featureName: features.find((f) => f.id === pbi.feature_id)?.name ?? '',
-          assigneeName: users.find((u) => u.id === pbi.assignee_id)?.name ?? '',
-          doneTasks: pbi.tasks.filter((t) => t.status === 'done').length,
-          totalTasks: pbi.tasks.length,
-          spent: pbi.costs.filter((c) => c.purchased).reduce((sum, c) => sum + costAmount(c), 0),
-          planned: pbi.costs.reduce((sum, c) => sum + costAmount(c), 0),
-        }),
-      )
+      .map((pbi, index): BacklogRow => ({
+        pbi,
+        rank: index + 1,
+        roomName: rooms.find((r) => r.id === pbi.room_id)?.name ?? '',
+        featureName: features.find((f) => f.id === pbi.feature_id)?.name ?? '',
+        assigneeName: users.find((u) => u.id === pbi.assignee_id)?.name ?? '',
+        doneTasks: pbi.tasks.filter((t) => t.status === 'done').length,
+        totalTasks: pbi.tasks.length,
+        spent: pbi.costs.filter((c) => c.purchased).reduce((sum, c) => sum + costAmount(c), 0),
+        planned: pbi.costs.reduce((sum, c) => sum + costAmount(c), 0),
+      }))
       .filter((row) => needle === '' || row.pbi.title.toLowerCase().includes(needle))
     return filtered.sort((a, b) => sort.dir * compareRows(a, b, sort.key) || a.rank - b.rank)
   }, [pbis, rooms, features, users, query, sort])
@@ -96,7 +96,7 @@ export function Backlog({
   }
 
   if (pbis.length === 0) {
-    return <p className="muted">No work items match the current filters.</p>
+    return <p className="muted">{t('backlog.emptyFiltered')}</p>
   }
 
   return (
@@ -105,26 +105,51 @@ export function Backlog({
         <input
           type="search"
           className="backlog-search"
-          placeholder="Filter by name…"
+          placeholder={t('backlog.searchPlaceholder')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <span className="backlog-count">
-          {rows.length === pbis.length ? `${pbis.length} items` : `${rows.length} of ${pbis.length} items`}
+          {rows.length === pbis.length
+            ? t('backlog.itemCount', { count: pbis.length })
+            : t('backlog.itemCountFiltered', { shown: rows.length, total: pbis.length })}
         </span>
       </div>
       <div className="cost-table-wrap">
         <table className="cost-table backlog-table">
           <thead>
             <tr>
-              <SortableTh label="#" k="priority" sort={sort} onSort={toggleSort} className="backlog-col-rank" />
-              <SortableTh label="Work item" k="title" sort={sort} onSort={toggleSort} />
-              <SortableTh label="Room" k="room" sort={sort} onSort={toggleSort} />
-              <SortableTh label="Feature" k="feature" sort={sort} onSort={toggleSort} />
-              <SortableTh label="Status" k="status" sort={sort} onSort={toggleSort} />
-              <SortableTh label="Assignee" k="assignee" sort={sort} onSort={toggleSort} />
-              <SortableTh label="Tasks" k="tasks" sort={sort} onSort={toggleSort} className="backlog-col-tasks" />
-              <SortableTh label="Costs" k="costs" sort={sort} onSort={toggleSort} className="cost-col-amount" />
+              <SortableTh
+                label="#"
+                k="priority"
+                sort={sort}
+                onSort={toggleSort}
+                className="backlog-col-rank"
+              />
+              <SortableTh label={t('backlog.workItem')} k="title" sort={sort} onSort={toggleSort} />
+              <SortableTh label={t('common.room')} k="room" sort={sort} onSort={toggleSort} />
+              <SortableTh label={t('common.feature')} k="feature" sort={sort} onSort={toggleSort} />
+              <SortableTh label={t('common.status')} k="status" sort={sort} onSort={toggleSort} />
+              <SortableTh
+                label={t('common.assignee')}
+                k="assignee"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortableTh
+                label={t('common.tasks')}
+                k="tasks"
+                sort={sort}
+                onSort={toggleSort}
+                className="backlog-col-tasks"
+              />
+              <SortableTh
+                label={t('common.costs')}
+                k="costs"
+                sort={sort}
+                onSort={toggleSort}
+                className="cost-col-amount"
+              />
             </tr>
           </thead>
           <tbody>
@@ -143,7 +168,9 @@ export function Backlog({
                     <span className="cost-item-title">{pbi.title}</span>
                     {pbi.description && <span className="cost-item-reason">{pbi.description}</span>}
                   </td>
-                  <td>{row.roomName && <span className="badge badge-room">{row.roomName}</span>}</td>
+                  <td>
+                    {row.roomName && <span className="badge badge-room">{row.roomName}</span>}
+                  </td>
                   <td>
                     {row.featureName && (
                       <span className="badge badge-feature">{row.featureName}</span>
@@ -153,12 +180,12 @@ export function Backlog({
                     <select
                       className={`backlog-select status-${pbi.status}`}
                       value={pbi.status}
-                      title="Status"
+                      title={t('common.status')}
                       onChange={(e) => onMove(pbi.id, e.target.value as Status)}
                     >
                       {STATUSES.map((status) => (
                         <option key={status} value={status}>
-                          {STATUS_LABELS[status]}
+                          {t(`status.${status}`)}
                         </option>
                       ))}
                     </select>
@@ -167,12 +194,12 @@ export function Backlog({
                     <select
                       className={`backlog-select${pbi.assignee_id === null ? ' backlog-select-empty' : ''}`}
                       value={pbi.assignee_id ?? ''}
-                      title="Assignee"
+                      title={t('common.assignee')}
                       onChange={(e) =>
                         onAssign(pbi.id, e.target.value === '' ? null : Number(e.target.value))
                       }
                     >
-                      <option value="">Unassigned</option>
+                      <option value="">{t('common.unassigned')}</option>
                       {users.map((user) => (
                         <option key={user.id} value={user.id}>
                           {user.name}
@@ -206,7 +233,7 @@ export function Backlog({
             })}
             {rows.length === 0 && (
               <tr className="backlog-no-results">
-                <td colSpan={8}>No work items match “{query.trim()}”.</td>
+                <td colSpan={8}>{t('backlog.noMatch', { query: query.trim() })}</td>
               </tr>
             )}
           </tbody>
