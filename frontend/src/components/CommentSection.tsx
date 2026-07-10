@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Comment, EntityType, User } from '../api'
@@ -12,15 +13,16 @@ interface CommentSectionProps {
   currentUser: User
 }
 
-function formatTimestamp(createdAt: string): string {
+function formatTimestamp(createdAt: string, locale: string): string {
   const iso = createdAt.endsWith('Z') ? createdAt : `${createdAt}Z`
-  return new Date(iso).toLocaleString(undefined, {
+  return new Date(iso).toLocaleString(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
   })
 }
 
 export function CommentSection({ entityType, entityId, users, currentUser }: CommentSectionProps) {
+  const { t, i18n } = useTranslation()
   const [comments, setComments] = useState<Comment[]>([])
   const [body, setBody] = useState('')
   const [busy, setBusy] = useState(false)
@@ -35,12 +37,12 @@ export function CommentSection({ entityType, entityId, users, currentUser }: Com
         if (!cancelled) setComments(list)
       })
       .catch(() => {
-        if (!cancelled) setError('Could not load comments')
+        if (!cancelled) setError(t('comments.loadError'))
       })
     return () => {
       cancelled = true
     }
-  }, [entityType, entityId])
+  }, [entityType, entityId, t])
 
   const post = async (event: FormEvent) => {
     event.preventDefault()
@@ -58,7 +60,7 @@ export function CommentSection({ entityType, entityId, users, currentUser }: Com
       setComments((current) => [...current, comment])
       setBody('')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not post comment')
+      setError(e instanceof Error ? e.message : t('comments.postError'))
     } finally {
       setBusy(false)
     }
@@ -70,7 +72,7 @@ export function CommentSection({ entityType, entityId, users, currentUser }: Com
       await api.deleteComment(commentId)
       setComments((current) => current.filter((c) => c.id !== commentId))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not delete comment')
+      setError(e instanceof Error ? e.message : t('comments.deleteError'))
     }
   }
 
@@ -84,7 +86,7 @@ export function CommentSection({ entityType, entityId, users, currentUser }: Com
           `${current}${current && !current.endsWith('\n') ? '\n' : ''}![${file.name}](${url})\n`,
       )
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not upload image')
+      setError(e instanceof Error ? e.message : t('comments.uploadError'))
     } finally {
       setBusy(false)
     }
@@ -92,8 +94,8 @@ export function CommentSection({ entityType, entityId, users, currentUser }: Com
 
   return (
     <section className="comments">
-      <h3>Comments</h3>
-      {comments.length === 0 && <p className="muted">No comments yet — start the discussion.</p>}
+      <h3>{t('comments.title')}</h3>
+      {comments.length === 0 && <p className="muted">{t('comments.empty')}</p>}
       {comments.map((comment) => {
         const author = users.find((u) => u.id === comment.author_id)
         return (
@@ -102,12 +104,14 @@ export function CommentSection({ entityType, entityId, users, currentUser }: Com
               <span className={`avatar avatar-sm${author ? '' : ' avatar-empty'}`}>
                 {author ? author.name.charAt(0).toUpperCase() : '?'}
               </span>
-              <span className="comment-author">{author?.name ?? 'Former user'}</span>
-              <span className="comment-time">{formatTimestamp(comment.created_at)}</span>
+              <span className="comment-author">{author?.name ?? t('comments.formerUser')}</span>
+              <span className="comment-time">
+                {formatTimestamp(comment.created_at, i18n.language)}
+              </span>
               <button
                 type="button"
                 className="icon-button"
-                title="Delete comment"
+                title={t('comments.delete')}
                 onClick={() => void remove(comment.id)}
               >
                 ✕
@@ -124,7 +128,7 @@ export function CommentSection({ entityType, entityId, users, currentUser }: Com
         <textarea
           value={body}
           rows={3}
-          placeholder="Write a comment… (markdown supported)"
+          placeholder={t('comments.placeholder')}
           onChange={(e) => setBody(e.target.value)}
         />
         <div className="comment-form-actions">
@@ -140,10 +144,10 @@ export function CommentSection({ entityType, entityId, users, currentUser }: Com
             }}
           />
           <button type="button" disabled={busy} onClick={() => fileInput.current?.click()}>
-            🖼 Add image
+            {t('comments.addImage')}
           </button>
           <button type="submit" className="primary" disabled={busy || !body.trim()}>
-            Comment
+            {t('comments.submit')}
           </button>
         </div>
       </form>

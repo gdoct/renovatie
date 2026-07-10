@@ -104,7 +104,10 @@ export const api = {
 
   listRooms: (projectId: number) => request<Room[]>(`/rooms?project_id=${projectId}`),
   createRoom: (name: string, projectId: number) =>
-    request<Room>('/rooms', { method: 'POST', body: JSON.stringify({ name, project_id: projectId }) }),
+    request<Room>('/rooms', {
+      method: 'POST',
+      body: JSON.stringify({ name, project_id: projectId }),
+    }),
   updateRoom: (id: number, payload: Partial<{ name: string }>) =>
     request<Room>(`/rooms/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   deleteRoom: (id: number) => request<void>(`/rooms/${id}`, { method: 'DELETE' }),
@@ -217,8 +220,9 @@ export const api = {
 }
 
 // Board lanes, in display order. To add or reorder a lane, update the Status
-// type above, this list, STATUS_LABELS, and the matching Literal in
-// backend/app/schemas.py — the board, dashboard, and modals all derive from it.
+// type above, this list, the `status.*` keys in src/i18n/{en,nl}.json, and the
+// matching Literal in backend/app/schemas.py — the board, dashboard, and
+// modals all derive from it.
 export const STATUSES: Status[] = ['todo', 'committed', 'in_progress', 'done']
 
 // Global board order: lower priority value first, id as tie-breaker.
@@ -242,10 +246,3 @@ const euroCents = new Intl.NumberFormat('nl-NL', {
 
 export const formatEuro = (amount: number): string =>
   (Number.isInteger(amount) ? euroWhole : euroCents).format(amount)
-
-export const STATUS_LABELS: Record<Status, string> = {
-  todo: 'Backlog',
-  committed: 'Committed',
-  in_progress: 'In Progress',
-  done: 'Done',
-}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import type { Feature, PBI, Project, Room, User } from '../api'
 import { api } from '../api'
 
@@ -28,6 +29,7 @@ export function ProjectConfig({
   onProjectDeleted,
   onClose,
 }: ProjectConfigProps) {
+  const { t } = useTranslation()
   const [globalUsers, setGlobalUsers] = useState<User[]>([])
   const [deleteConfirm, setDeleteConfirm] = useState('')
 
@@ -46,37 +48,28 @@ export function ProjectConfig({
   const deleteRoom = (room: Room) => {
     const count = pbiCountForRoom(room.id)
     if (count > 0) {
-      window.alert(`"${room.name}" still has ${count} PBI(s); move or delete them first.`)
+      window.alert(t('config.roomHasPbis', { name: room.name, count }))
       return
     }
-    if (!window.confirm(`Delete room "${room.name}"?`)) return
+    if (!window.confirm(t('config.confirmDeleteRoom', { name: room.name }))) return
     void run(() => api.deleteRoom(room.id))
   }
 
   const deleteFeature = (feature: Feature) => {
     const count = pbiCountForFeature(feature.id)
-    const suffix = count > 0 ? ` ${count} PBI(s) will keep existing without a feature.` : ''
-    if (!window.confirm(`Delete feature "${feature.name}"?${suffix}`)) return
+    const suffix = count > 0 ? t('config.featurePbisNote', { count }) : ''
+    if (!window.confirm(`${t('config.confirmDeleteFeature', { name: feature.name })}${suffix}`))
+      return
     void run(() => api.deleteFeature(feature.id))
   }
 
   const removeMember = (user: User) => {
-    if (
-      !window.confirm(
-        `Remove ${user.name} from this project? Their assignments in this project will be cleared.`,
-      )
-    )
-      return
+    if (!window.confirm(t('config.confirmRemoveMember', { name: user.name }))) return
     void run(() => api.removeProjectUser(project.id, user.id))
   }
 
   const deleteUser = (user: User) => {
-    if (
-      !window.confirm(
-        `Delete ${user.name} everywhere? They will be removed from all projects and unassigned from all work.`,
-      )
-    )
-      return
+    if (!window.confirm(t('config.confirmDeleteUser', { name: user.name }))) return
     void run(() => api.deleteUser(user.id))
   }
 
@@ -87,24 +80,29 @@ export function ProjectConfig({
   return (
     <div className="config-page">
       <header className="config-header">
-        <h1>Project settings</h1>
-        <button type="button" className="icon-button config-close" title="Close" onClick={onClose}>
+        <h1>{t('app.projectSettings')}</h1>
+        <button
+          type="button"
+          className="icon-button config-close"
+          title={t('common.close')}
+          onClick={onClose}
+        >
           ✕
         </button>
       </header>
 
       <div className="config-sections">
         <section className="config-section">
-          <h2>Project</h2>
+          <h2>{t('config.project')}</h2>
           <RenameForm
-            label="Project name"
+            label={t('config.projectName')}
             value={project.name}
             onSave={(name) => run(() => api.updateProject(project.id, { name }))}
           />
         </section>
 
         <section className="config-section">
-          <h2>Rooms</h2>
+          <h2>{t('common.rooms')}</h2>
           <ul className="config-list">
             {rooms.map((room) => (
               <li key={room.id} className="config-row">
@@ -112,21 +110,23 @@ export function ProjectConfig({
                   value={room.name}
                   onSave={(name) => run(() => api.updateRoom(room.id, { name }))}
                 />
-                <span className="muted">{pbiCountForRoom(room.id)} PBIs</span>
+                <span className="muted">
+                  {t('config.pbiCount', { count: pbiCountForRoom(room.id) })}
+                </span>
                 <button type="button" className="danger small" onClick={() => deleteRoom(room)}>
-                  Delete
+                  {t('common.delete')}
                 </button>
               </li>
             ))}
           </ul>
           <AddForm
-            placeholder="Add room…"
+            placeholder={t('config.addRoomPlaceholder')}
             onAdd={(name) => run(() => api.createRoom(name, project.id))}
           />
         </section>
 
         <section className="config-section">
-          <h2>Features</h2>
+          <h2>{t('common.features')}</h2>
           <ul className="config-list">
             {features.map((feature) => (
               <li key={feature.id} className="config-row">
@@ -134,35 +134,37 @@ export function ProjectConfig({
                   value={feature.name}
                   onSave={(name) => run(() => api.updateFeature(feature.id, { name }))}
                 />
-                <span className="muted">{pbiCountForFeature(feature.id)} PBIs</span>
+                <span className="muted">
+                  {t('config.pbiCount', { count: pbiCountForFeature(feature.id) })}
+                </span>
                 <button type="button" className="small" onClick={() => onOpenFeature(feature.id)}>
-                  Open
+                  {t('common.open')}
                 </button>
                 <button
                   type="button"
                   className="danger small"
                   onClick={() => deleteFeature(feature)}
                 >
-                  Delete
+                  {t('common.delete')}
                 </button>
               </li>
             ))}
           </ul>
           <AddForm
-            placeholder="Add feature…"
+            placeholder={t('config.addFeaturePlaceholder')}
             onAdd={(name) => run(() => api.createFeature(name, project.id))}
           />
         </section>
 
         <section className="config-section">
-          <h2>People</h2>
+          <h2>{t('common.people')}</h2>
           <ul className="config-list">
             {members.map((user) => (
               <li key={user.id} className="config-row">
                 <span className="avatar">{user.name.charAt(0).toUpperCase()}</span>
                 <span className="config-row-label">
                   {user.name}
-                  {user.is_admin && <span className="admin-badge">admin</span>}
+                  {user.is_admin && <span className="admin-badge">{t('config.adminBadge')}</span>}
                 </span>
                 {currentUser.is_admin && (
                   <label className="checkbox-label">
@@ -173,15 +175,15 @@ export function ProjectConfig({
                         void run(() => api.updateUser(user.id, { is_admin: e.target.checked }))
                       }
                     />
-                    Admin
+                    {t('config.admin')}
                   </label>
                 )}
                 <button type="button" className="small" onClick={() => removeMember(user)}>
-                  Remove from project
+                  {t('config.removeFromProject')}
                 </button>
                 {currentUser.is_admin && (
                   <button type="button" className="danger small" onClick={() => deleteUser(user)}>
-                    Delete user
+                    {t('config.deleteUser')}
                   </button>
                 )}
               </li>
@@ -196,7 +198,7 @@ export function ProjectConfig({
                   if (id) void run(() => api.addProjectUser(project.id, id))
                 }}
               >
-                <option value="">Add existing user…</option>
+                <option value="">{t('config.addExistingUser')}</option>
                 {nonMembers.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name}
@@ -206,7 +208,7 @@ export function ProjectConfig({
             </div>
           )}
           <AddForm
-            placeholder="Create new user…"
+            placeholder={t('config.createUserPlaceholder')}
             onAdd={(name) =>
               run(async () => {
                 const user = await api.createUser(name)
@@ -218,10 +220,13 @@ export function ProjectConfig({
 
         {currentUser.is_admin && (
           <section className="config-section danger-zone">
-            <h2>Danger zone</h2>
+            <h2>{t('config.dangerZone')}</h2>
             <p className="muted">
-              Deleting this project permanently removes all its rooms, features, PBIs, tasks,
-              costs and comments. Type <strong>{project.name}</strong> to confirm.
+              <Trans
+                i18nKey="config.dangerText"
+                values={{ name: project.name }}
+                components={{ bold: <strong /> }}
+              />
             </p>
             <div className="config-danger-row">
               <input
@@ -235,7 +240,7 @@ export function ProjectConfig({
                 disabled={deleteConfirm !== project.name}
                 onClick={deleteProject}
               >
-                Delete project
+                {t('config.deleteProject')}
               </button>
             </div>
           </section>
@@ -252,6 +257,7 @@ interface RenameFormProps {
 }
 
 function RenameForm({ label, value, onSave }: RenameFormProps) {
+  const { t } = useTranslation()
   const [draft, setDraft] = useState(value)
 
   useEffect(() => setDraft(value), [value])
@@ -267,7 +273,7 @@ function RenameForm({ label, value, onSave }: RenameFormProps) {
     <form className="add-form" onSubmit={submit} aria-label={label}>
       <input value={draft} onChange={(e) => setDraft(e.target.value)} />
       <button type="submit" disabled={!draft.trim() || draft.trim() === value}>
-        Save
+        {t('common.save')}
       </button>
     </form>
   )
@@ -279,6 +285,7 @@ interface InlineRenameProps {
 }
 
 function InlineRename({ value, onSave }: InlineRenameProps) {
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value)
 
@@ -287,7 +294,7 @@ function InlineRename({ value, onSave }: InlineRenameProps) {
       <button
         type="button"
         className="config-row-label config-rename"
-        title="Rename"
+        title={t('config.rename')}
         onClick={() => {
           setDraft(value)
           setEditing(true)
@@ -315,7 +322,7 @@ function InlineRename({ value, onSave }: InlineRenameProps) {
         onBlur={() => setEditing(false)}
       />
       <button type="submit" onMouseDown={(e) => e.preventDefault()} disabled={!draft.trim()}>
-        Save
+        {t('common.save')}
       </button>
     </form>
   )

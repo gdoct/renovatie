@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Feature, Room, Status } from '../api'
 import { Modal } from './Modal'
 
@@ -26,6 +27,7 @@ export function NewPBIModal({
   onCreate,
   onClose,
 }: NewPBIModalProps) {
+  const { t } = useTranslation()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [roomId, setRoomId] = useState<number | null>(defaultRoomId ?? rooms[0]?.id ?? null)
@@ -44,22 +46,22 @@ export function NewPBIModal({
   }
 
   return (
-    <Modal title="New PBI" onClose={onClose}>
+    <Modal title={t('newPbi.title')} onClose={onClose}>
       {rooms.length === 0 ? (
-        <p>Add a room in the sidebar first — every PBI belongs to a room.</p>
+        <p>{t('newPbi.needRoom')}</p>
       ) : (
         <form className="modal-form" onSubmit={submit}>
           <label>
-            Title
+            {t('common.title')}
             <input
               autoFocus
               value={title}
-              placeholder="e.g. Tile the bathroom floor"
+              placeholder={t('newPbi.titlePlaceholder')}
               onChange={(e) => setTitle(e.target.value)}
             />
           </label>
           <label>
-            Description
+            {t('common.description')}
             <textarea
               value={description}
               rows={3}
@@ -68,7 +70,7 @@ export function NewPBIModal({
           </label>
           <div className="form-row">
             <label>
-              Room
+              {t('common.room')}
               <select value={roomId ?? ''} onChange={(e) => setRoomId(Number(e.target.value))}>
                 {rooms.map((room) => (
                   <option key={room.id} value={room.id}>
@@ -78,14 +80,14 @@ export function NewPBIModal({
               </select>
             </label>
             <label>
-              Feature
+              {t('common.feature')}
               <select
                 value={featureId ?? ''}
                 onChange={(e) =>
                   setFeatureId(e.target.value === '' ? null : Number(e.target.value))
                 }
               >
-                <option value="">— none —</option>
+                <option value="">{t('common.none')}</option>
                 {features.map((feature) => (
                   <option key={feature.id} value={feature.id}>
                     {feature.name}
@@ -96,10 +98,10 @@ export function NewPBIModal({
           </div>
           <div className="modal-actions">
             <button type="button" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button type="submit" className="primary" disabled={!title.trim()}>
-              Create
+              {t('common.create')}
             </button>
           </div>
         </form>

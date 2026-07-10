@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { PBI, Room, Status, User } from '../api'
-import { STATUSES, STATUS_LABELS } from '../api'
+import { STATUSES } from '../api'
 
 interface DashboardProps {
   currentUser: User
@@ -17,10 +18,10 @@ interface Tip {
   text: string
 }
 
-function greeting(name: string): string {
+function greetingKey(): string {
   const hour = new Date().getHours()
-  const part = hour < 6 ? 'night' : hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
-  return `Good ${part}, ${name}`
+  const part = hour < 6 ? 'Night' : hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening'
+  return `dashboard.greeting${part}`
 }
 
 function countByStatus(list: PBI[]): Record<Status, number> {
@@ -34,6 +35,7 @@ function totalCount(counts: Record<Status, number>): number {
 }
 
 export function Dashboard({ currentUser, users, rooms, pbis, onOpenRoom }: DashboardProps) {
+  const { t } = useTranslation()
   const [tip, setTip] = useState<Tip | null>(null)
 
   const showTip = (event: MouseEvent, text: string) =>
@@ -58,7 +60,7 @@ export function Dashboard({ currentUser, users, rooms, pbis, onOpenRoom }: Dashb
     })),
     {
       key: 'unassigned',
-      label: 'Unassigned',
+      label: t('common.unassigned'),
       counts: countByStatus(pbis.filter((p) => p.assignee_id === null)),
     },
   ]
@@ -68,35 +70,51 @@ export function Dashboard({ currentUser, users, rooms, pbis, onOpenRoom }: Dashb
     <div className="dashboard">
       <section className="dash-hero">
         <div className="dash-hero-main">
-          <p className="dash-greeting">{greeting(currentUser.name)}</p>
+          <p className="dash-greeting">{t(greetingKey(), { name: currentUser.name })}</p>
           <div className="hero-figure">{completion}%</div>
           <div
             className="meter"
             role="img"
-            aria-label={`${completion}% of PBIs done`}
-            onMouseMove={(e) => showTip(e, `${overall.done} of ${total} PBIs done`)}
+            aria-label={t('dashboard.percentDone', { percent: completion })}
+            onMouseMove={(e) => showTip(e, t('dashboard.pbisDone', { done: overall.done, total }))}
             onMouseLeave={hideTip}
           >
             <div className="meter-fill" style={{ width: `${completion}%` }} />
           </div>
           <p className="dash-subline">
-            {overall.done} of {total} PBIs done · {openTasks.length} open task
-            {openTasks.length === 1 ? '' : 's'}
+            {t('dashboard.pbisDone', { done: overall.done, total })} ·{' '}
+            {t('dashboard.openTasks', { count: openTasks.length })}
           </p>
         </div>
         <div className="stat-tiles">
-          <StatTile label="Assigned to you" value={myOpenPbis.length} hint="open PBIs" />
-          <StatTile label="Your open tasks" value={myOpenTasks.length} hint="across all PBIs" />
-          <StatTile label="In progress" value={overall.in_progress} hint="PBIs house-wide" />
-          <StatTile label="Unassigned" value={unassignedOpen.length} hint="open PBIs, no owner" />
+          <StatTile
+            label={t('dashboard.tileAssigned')}
+            value={myOpenPbis.length}
+            hint={t('dashboard.tileAssignedHint')}
+          />
+          <StatTile
+            label={t('dashboard.tileOpenTasks')}
+            value={myOpenTasks.length}
+            hint={t('dashboard.tileOpenTasksHint')}
+          />
+          <StatTile
+            label={t('dashboard.tileInProgress')}
+            value={overall.in_progress}
+            hint={t('dashboard.tileInProgressHint')}
+          />
+          <StatTile
+            label={t('dashboard.tileUnassigned')}
+            value={unassignedOpen.length}
+            hint={t('dashboard.tileUnassignedHint')}
+          />
         </div>
       </section>
 
       <section className="dash-charts">
         <div className="chart-card">
-          <h3>PBIs by status</h3>
+          <h3>{t('dashboard.byStatus')}</h3>
           {total === 0 ? (
-            <p className="muted">No PBIs yet.</p>
+            <p className="muted">{t('dashboard.noPbis')}</p>
           ) : (
             <>
               <StackedBar counts={overall} scale={1} showTip={showTip} hideTip={hideTip} />
@@ -105,7 +123,7 @@ export function Dashboard({ currentUser, users, rooms, pbis, onOpenRoom }: Dashb
           )}
         </div>
         <div className="chart-card">
-          <h3>Workload by person</h3>
+          <h3>{t('dashboard.workload')}</h3>
           <div className="workload">
             {workloadRows.map((row) => {
               const rowTotal = totalCount(row.counts)
@@ -131,8 +149,8 @@ export function Dashboard({ currentUser, users, rooms, pbis, onOpenRoom }: Dashb
         </div>
       </section>
 
-      <h2 className="dash-section-title">Rooms</h2>
-      {rooms.length === 0 && <p className="muted">No rooms yet — add one in the board sidebar.</p>}
+      <h2 className="dash-section-title">{t('common.rooms')}</h2>
+      {rooms.length === 0 && <p className="muted">{t('dashboard.noRooms')}</p>}
       <section className="room-grid">
         {rooms.map((room) => {
           const roomPbis = pbis.filter((p) => p.room_id === room.id)
@@ -161,19 +179,19 @@ export function Dashboard({ currentUser, users, rooms, pbis, onOpenRoom }: Dashb
               </span>
               <span className="room-card-stats">
                 {roomTotal === 0 ? (
-                  <span className="muted">No PBIs yet</span>
+                  <span className="muted">{t('dashboard.noPbisShort')}</span>
                 ) : (
                   STATUSES.map((status) => (
                     <span key={status} className="room-card-stat">
                       <span className={`swatch swatch-${status}`} />
-                      {counts[status]} {STATUS_LABELS[status]}
+                      {counts[status]} {t(`status.${status}`)}
                     </span>
                   ))
                 )}
               </span>
               <span className="room-card-foot">
-                {roomOpenTasks} open task{roomOpenTasks === 1 ? '' : 's'}
-                {mine > 0 && ` · ${mine} assigned to you`}
+                {t('dashboard.openTasks', { count: roomOpenTasks })}
+                {mine > 0 && ` · ${t('dashboard.assignedToYou', { count: mine })}`}
               </span>
             </button>
           )
@@ -213,6 +231,7 @@ interface StackedBarProps {
 }
 
 function StackedBar({ counts, scale, showTip, hideTip }: StackedBarProps) {
+  const { t } = useTranslation()
   const total = totalCount(counts)
   if (total === 0) return null
   return (
@@ -223,7 +242,7 @@ function StackedBar({ counts, scale, showTip, hideTip }: StackedBarProps) {
           className={`stacked-segment segment-${status}`}
           style={{ flexGrow: counts[status] }}
           onMouseMove={(e) =>
-            showTip(e, `${counts[status]} ${STATUS_LABELS[status].toLowerCase()}`)
+            showTip(e, `${counts[status]} ${t(`status.${status}`).toLowerCase()}`)
           }
           onMouseLeave={hideTip}
         />
@@ -233,12 +252,13 @@ function StackedBar({ counts, scale, showTip, hideTip }: StackedBarProps) {
 }
 
 function Legend(): ReactNode {
+  const { t } = useTranslation()
   return (
     <div className="viz-legend">
       {STATUSES.map((status) => (
         <span key={status} className="viz-legend-item">
           <span className={`swatch swatch-${status}`} />
-          {STATUS_LABELS[status]}
+          {t(`status.${status}`)}
         </span>
       ))}
     </div>

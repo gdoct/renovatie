@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { User } from '../api'
+import { LanguageToggle } from './LanguageToggle'
 
 interface UserSelectProps {
   projectName: string
@@ -11,6 +13,7 @@ interface UserSelectProps {
 }
 
 export function UserSelect({ projectName, users, onSelect, onCreate, onBack }: UserSelectProps) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
 
   const submit = (event: FormEvent) => {
@@ -23,9 +26,12 @@ export function UserSelect({ projectName, users, onSelect, onCreate, onBack }: U
 
   return (
     <div className="user-select">
+      <div className="login-lang">
+        <LanguageToggle full />
+      </div>
       <div className="user-select-panel">
         <h1>{projectName}</h1>
-        <p className="muted">Who is working on the renovation today?</p>
+        <p className="muted">{t('userSelect.subtitle')}</p>
         <div className="user-select-list">
           {users.map((user) => (
             <button
@@ -39,12 +45,12 @@ export function UserSelect({ projectName, users, onSelect, onCreate, onBack }: U
             </button>
           ))}
         </div>
-        {users.length === 0 && <p className="muted">No users yet — add yourself below.</p>}
+        {users.length === 0 && <p className="muted">{t('userSelect.empty')}</p>}
         <form className="add-form" onSubmit={submit}>
           <input
             autoFocus
             value={name}
-            placeholder="Add a new user…"
+            placeholder={t('userSelect.addPlaceholder')}
             onChange={(e) => setName(e.target.value)}
           />
           <button type="submit" disabled={!name.trim()}>
@@ -52,7 +58,7 @@ export function UserSelect({ projectName, users, onSelect, onCreate, onBack }: U
           </button>
         </form>
         <button type="button" className="link-button" onClick={onBack}>
-          ← Switch project
+          {t('userSelect.switchProject')}
         </button>
       </div>
     </div>

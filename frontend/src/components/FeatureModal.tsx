@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Feature, User } from '../api'
 import { CommentSection } from './CommentSection'
 import { Modal } from './Modal'
@@ -18,6 +19,7 @@ export function FeatureModal({
   onUpdate,
   onClose,
 }: FeatureModalProps) {
+  const { t } = useTranslation()
   const [name, setName] = useState(feature.name)
   const [description, setDescription] = useState(feature.description)
 
@@ -38,14 +40,14 @@ export function FeatureModal({
   }
 
   return (
-    <Modal title={`Feature #${feature.id}`} onClose={onClose}>
+    <Modal title={t('feature.modalTitle', { id: feature.id })} onClose={onClose}>
       <div className="modal-form">
         <label>
-          Name
+          {t('common.name')}
           <input value={name} onChange={(e) => setName(e.target.value)} onBlur={saveText} />
         </label>
         <label>
-          Description
+          {t('common.description')}
           <textarea
             value={description}
             rows={3}
@@ -61,7 +63,7 @@ export function FeatureModal({
         />
         <div className="modal-actions">
           <button type="button" className="primary" onClick={onClose}>
-            Close
+            {t('common.close')}
           </button>
         </div>
       </div>

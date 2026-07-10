@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Feature, PBI, Room, User } from '../api'
 
 export type AssigneeFilter = number | 'unassigned'
@@ -36,6 +37,7 @@ export function Sidebar({
   onFeatureFilter,
   onAssigneeFilter,
 }: SidebarProps) {
+  const { t } = useTranslation()
   const progressFor = (predicate: (pbi: PBI) => boolean) => {
     const scoped = pbis.filter(predicate)
     const done = scoped.filter((p) => p.status === 'done').length
@@ -48,7 +50,7 @@ export function Sidebar({
         <button
           type="button"
           className="sidebar-toggle"
-          title="Show filters"
+          title={t('sidebar.showFilters')}
           aria-expanded={false}
           onClick={onToggle}
         >
@@ -61,11 +63,11 @@ export function Sidebar({
   return (
     <aside id="filters-sidebar" className="sidebar">
       <div className="sidebar-header">
-        <h2>Filters</h2>
+        <h2>{t('sidebar.filters')}</h2>
         <button
           type="button"
           className="sidebar-toggle"
-          title="Hide filters"
+          title={t('sidebar.hideFilters')}
           aria-expanded
           onClick={onToggle}
         >
@@ -73,13 +75,13 @@ export function Sidebar({
         </button>
       </div>
       <section className="sidebar-section">
-        <h2>Rooms</h2>
+        <h2>{t('common.rooms')}</h2>
         <button
           type="button"
           className={`filter-row${roomFilter.length === 0 ? ' active' : ''}`}
           onClick={() => onRoomFilter([])}
         >
-          All rooms
+          {t('sidebar.allRooms')}
         </button>
         <div className="filter-list">
           {rooms.map((room) => {
@@ -99,13 +101,13 @@ export function Sidebar({
       </section>
 
       <section className="sidebar-section">
-        <h2>Features</h2>
+        <h2>{t('common.features')}</h2>
         <button
           type="button"
           className={`filter-row${featureFilter.length === 0 ? ' active' : ''}`}
           onClick={() => onFeatureFilter([])}
         >
-          All features
+          {t('sidebar.allFeatures')}
         </button>
         <div className="filter-list">
           {features.map((feature) => {
@@ -125,19 +127,19 @@ export function Sidebar({
       </section>
 
       <section className="sidebar-section">
-        <h2>People</h2>
+        <h2>{t('common.people')}</h2>
         <button
           type="button"
           className={`filter-row${assigneeFilter.length === 0 ? ' active' : ''}`}
           onClick={() => onAssigneeFilter([])}
         >
-          Everyone
+          {t('sidebar.everyone')}
         </button>
         {(() => {
           const { done, total } = progressFor((p) => p.assignee_id === null)
           return (
             <FilterRow
-              label="Unassigned"
+              label={t('common.unassigned')}
               done={done}
               total={total}
               active={assigneeFilter.includes('unassigned')}

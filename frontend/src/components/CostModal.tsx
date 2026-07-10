@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Cost, User } from '../api'
 import { CommentSection } from './CommentSection'
 import { Modal } from './Modal'
@@ -36,6 +37,7 @@ export function CostModal({
   onDelete,
   onClose,
 }: CostModalProps) {
+  const { t } = useTranslation()
   const [title, setTitle] = useState(cost.title)
   const [reason, setReason] = useState(cost.reason)
   const [estimated, setEstimated] = useState(toInput(cost.estimated_cost))
@@ -72,25 +74,25 @@ export function CostModal({
   }
 
   return (
-    <Modal title={`Cost #${cost.id}`} onClose={onClose}>
+    <Modal title={t('cost.modalTitle', { id: cost.id })} onClose={onClose}>
       <div className="modal-form">
         <label>
-          What
+          {t('cost.what')}
           <input value={title} onChange={(e) => setTitle(e.target.value)} onBlur={saveText} />
         </label>
         <label>
-          Why
+          {t('cost.why')}
           <textarea
             value={reason}
             rows={3}
-            placeholder="Why is this purchase needed?"
+            placeholder={t('cost.whyPlaceholder')}
             onChange={(e) => setReason(e.target.value)}
             onBlur={saveText}
           />
         </label>
         <div className="form-row">
           <label>
-            Estimated cost (€)
+            {t('cost.estimatedLabel')}
             <input
               inputMode="decimal"
               placeholder="0"
@@ -100,7 +102,7 @@ export function CostModal({
             />
           </label>
           <label>
-            Actual cost (€)
+            {t('cost.actualLabel')}
             <input
               inputMode="decimal"
               placeholder="0"
@@ -116,7 +118,7 @@ export function CostModal({
             checked={cost.purchased}
             onChange={(e) => onUpdate({ purchased: e.target.checked })}
           />
-          Purchased
+          {t('costs.purchased')}
         </label>
         <CommentSection
           entityType="cost"
@@ -126,10 +128,10 @@ export function CostModal({
         />
         <div className="modal-actions">
           <button type="button" className="danger" onClick={onDelete}>
-            Delete cost
+            {t('cost.delete')}
           </button>
           <button type="button" className="primary" onClick={onClose}>
-            Close
+            {t('common.close')}
           </button>
         </div>
       </div>

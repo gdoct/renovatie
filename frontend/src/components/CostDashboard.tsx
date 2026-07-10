@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { MouseEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Cost, PBI, Room } from '../api'
 import { costAmount, formatEuro } from '../api'
 
@@ -42,6 +43,7 @@ const SLICE_COLORS = [
 const OTHER_COLOR = 'var(--cat-other)'
 
 export function CostDashboard({ rooms, pbis, onToggleCost, onSelectCost }: CostDashboardProps) {
+  const { t } = useTranslation()
   const [tip, setTip] = useState<Tip | null>(null)
   const [roomFilter, setRoomFilter] = useState<number | null>(null)
   const [purchasedFilter, setPurchasedFilter] = useState<PurchasedFilter>('all')
@@ -109,17 +111,26 @@ export function CostDashboard({ rooms, pbis, onToggleCost, onSelectCost }: CostD
       label: row.room.name,
       value: row.total,
       color: rowColor(roomRows.indexOf(row)),
-      tip: `${row.room.name} — ${formatEuro(row.total)} planned · ${formatEuro(row.spent)} spent`,
+      tip: t('costs.sliceTip', {
+        label: row.room.name,
+        planned: formatEuro(row.total),
+        spent: formatEuro(row.spent),
+      }),
     }))
   const foldedTotal = foldedRows.reduce((total, row) => total + row.total, 0)
   if (foldedTotal > 0) {
     const foldedSpent = foldedRows.reduce((total, row) => total + row.spent, 0)
+    const otherLabel = t('costs.otherRooms', { count: foldedRows.length })
     slices.push({
       key: 'other',
-      label: `Other (${foldedRows.length} rooms)`,
+      label: otherLabel,
       value: foldedTotal,
       color: OTHER_COLOR,
-      tip: `Other (${foldedRows.length} rooms) — ${formatEuro(foldedTotal)} planned · ${formatEuro(foldedSpent)} spent`,
+      tip: t('costs.sliceTip', {
+        label: otherLabel,
+        planned: formatEuro(foldedTotal),
+        spent: formatEuro(foldedSpent),
+      }),
     })
   }
   const pieTotal = checkedRows.reduce((total, row) => total + row.total, 0)
@@ -144,50 +155,69 @@ export function CostDashboard({ rooms, pbis, onToggleCost, onSelectCost }: CostD
     <div className="dashboard">
       <section className="dash-hero">
         <div className="dash-hero-main">
-          <p className="dash-greeting">Renovation costs</p>
+          <p className="dash-greeting">{t('costs.title')}</p>
           <div className="hero-figure">{formatEuro(spent)}</div>
           <div
             className="meter"
             role="img"
-            aria-label={`${formatEuro(spent)} spent of ${formatEuro(planned)} planned`}
+            aria-label={t('costs.spentOfPlanned', {
+              spent: formatEuro(spent),
+              planned: formatEuro(planned),
+            })}
             onMouseMove={(e) =>
-              showTip(e, `${formatEuro(spent)} spent of ${formatEuro(planned)} planned`)
+              showTip(
+                e,
+                t('costs.spentOfPlanned', {
+                  spent: formatEuro(spent),
+                  planned: formatEuro(planned),
+                }),
+              )
             }
             onMouseLeave={hideTip}
           >
             <div className="meter-fill" style={{ width: `${spentPercent}%` }} />
           </div>
           <p className="dash-subline">
-            {spentPercent}% of {formatEuro(planned)} planned · {purchased.length} of{' '}
-            {entries.length} item{entries.length === 1 ? '' : 's'} purchased
+            {t('costs.percentOfPlanned', { percent: spentPercent, planned: formatEuro(planned) })} ·{' '}
+            {t('costs.itemsPurchased', { purchased: purchased.length, count: entries.length })}
           </p>
         </div>
         <div className="stat-tiles">
-          <StatTile label="Planned" value={formatEuro(planned)} hint="all cost items" />
-          <StatTile label="Spent" value={formatEuro(spent)} hint="purchased items" />
-          <StatTile label="Still to buy" value={formatEuro(remaining)} hint="open items" />
           <StatTile
-            label="Purchased"
+            label={t('costs.tilePlanned')}
+            value={formatEuro(planned)}
+            hint={t('costs.tilePlannedHint')}
+          />
+          <StatTile
+            label={t('costs.tileSpent')}
+            value={formatEuro(spent)}
+            hint={t('costs.tileSpentHint')}
+          />
+          <StatTile
+            label={t('costs.tileRemaining')}
+            value={formatEuro(remaining)}
+            hint={t('costs.tileRemainingHint')}
+          />
+          <StatTile
+            label={t('costs.tilePurchased')}
             value={`${purchased.length}/${entries.length}`}
-            hint="items checked off"
+            hint={t('costs.tilePurchasedHint')}
           />
         </div>
       </section>
 
       <section className="dash-charts">
         <div className="chart-card">
-          <h3>Cost per room</h3>
+          <h3>{t('costs.perRoom')}</h3>
           {roomRows.length === 0 ? (
-            <p className="muted">No costs yet — add them on a PBI.</p>
+            <p className="muted">{t('costs.emptyPie')}</p>
           ) : (
             <div className="cost-pie">
               {pieTotal > 0 ? (
                 <Donut slices={slices} total={pieTotal} showTip={showTip} hideTip={hideTip} />
               ) : (
                 <p className="muted cost-pie-empty">
-                  {checkedRows.length === 0
-                    ? 'No rooms selected — tick a room to include it.'
-                    : 'No amounts yet for the selected rooms.'}
+                  {checkedRows.length === 0 ? t('costs.noRoomsSelected') : t('costs.noAmounts')}
                 </p>
               )}
               <ul className="cost-pie-legend">
@@ -207,9 +237,7 @@ export function CostDashboard({ rooms, pbis, onToggleCost, onSelectCost }: CostD
                 ))}
               </ul>
               {coloredCount < roomRows.length && (
-                <p className="muted cost-pie-note">
-                  The smallest rooms are grouped as one gray “Other” slice.
-                </p>
+                <p className="muted cost-pie-note">{t('costs.otherNote')}</p>
               )}
             </div>
           )}
@@ -217,13 +245,13 @@ export function CostDashboard({ rooms, pbis, onToggleCost, onSelectCost }: CostD
       </section>
 
       <div className="cost-list-head">
-        <h2 className="dash-section-title">Purchase list</h2>
+        <h2 className="dash-section-title">{t('costs.purchaseList')}</h2>
         <div className="cost-filters">
           <select
             value={roomFilter ?? ''}
             onChange={(e) => setRoomFilter(e.target.value === '' ? null : Number(e.target.value))}
           >
-            <option value="">All rooms</option>
+            <option value="">{t('sidebar.allRooms')}</option>
             {rooms.map((room) => (
               <option key={room.id} value={room.id}>
                 {room.name}
@@ -234,30 +262,28 @@ export function CostDashboard({ rooms, pbis, onToggleCost, onSelectCost }: CostD
             value={purchasedFilter}
             onChange={(e) => setPurchasedFilter(e.target.value as PurchasedFilter)}
           >
-            <option value="all">All items</option>
-            <option value="open">Still to buy</option>
-            <option value="purchased">Purchased</option>
+            <option value="all">{t('costs.filterAllItems')}</option>
+            <option value="open">{t('costs.stillToBuy')}</option>
+            <option value="purchased">{t('costs.purchased')}</option>
           </select>
         </div>
       </div>
 
       {listed.length === 0 ? (
         <p className="muted">
-          {entries.length === 0
-            ? 'No costs yet — open a PBI and add its expected purchases.'
-            : 'No cost items match these filters.'}
+          {entries.length === 0 ? t('costs.emptyList') : t('costs.emptyFiltered')}
         </p>
       ) : (
         <div className="cost-table-wrap">
           <table className="cost-table">
             <thead>
               <tr>
-                <th className="cost-col-check" aria-label="Purchased" />
-                <th>Item</th>
-                <th>Room</th>
+                <th className="cost-col-check" aria-label={t('costs.purchased')} />
+                <th>{t('costs.item')}</th>
+                <th>{t('common.room')}</th>
                 <th>PBI</th>
-                <th className="cost-col-amount">Estimated</th>
-                <th className="cost-col-amount">Actual</th>
+                <th className="cost-col-amount">{t('costs.estimated')}</th>
+                <th className="cost-col-amount">{t('costs.actual')}</th>
               </tr>
             </thead>
             <tbody>
@@ -271,7 +297,9 @@ export function CostDashboard({ rooms, pbis, onToggleCost, onSelectCost }: CostD
                     <input
                       type="checkbox"
                       checked={cost.purchased}
-                      title={cost.purchased ? 'Mark as not purchased' : 'Mark as purchased'}
+                      title={
+                        cost.purchased ? t('costs.markNotPurchased') : t('costs.markPurchased')
+                      }
                       onChange={(e) => onToggleCost(cost.id, e.target.checked)}
                     />
                   </td>
@@ -293,9 +321,7 @@ export function CostDashboard({ rooms, pbis, onToggleCost, onSelectCost }: CostD
             <tfoot>
               <tr>
                 <td className="cost-col-check" />
-                <td colSpan={3}>
-                  Total ({listed.length} item{listed.length === 1 ? '' : 's'})
-                </td>
+                <td colSpan={3}>{t('costs.totalItems', { count: listed.length })}</td>
                 <td className="cost-col-amount">{formatEuro(listedEstimated)}</td>
                 <td className="cost-col-amount">{formatEuro(listedActual)}</td>
               </tr>
@@ -331,6 +357,7 @@ interface DonutProps {
 // Donut pie: each slice is a circle stroke segment via dasharray, which gives a
 // 2px surface gap between slices and the center hole for free.
 function Donut({ slices, total, showTip, hideTip }: DonutProps) {
+  const { t } = useTranslation()
   const radius = 60
   const circumference = 2 * Math.PI * radius
   const drawn = slices.filter((s) => s.value > 0)
@@ -341,7 +368,7 @@ function Donut({ slices, total, showTip, hideTip }: DonutProps) {
       viewBox="0 0 200 200"
       className="cost-donut"
       role="img"
-      aria-label={`Cost per room: ${drawn.map((s) => `${s.label} ${formatEuro(s.value)}`).join(', ')}`}
+      aria-label={`${t('costs.perRoom')}: ${drawn.map((s) => `${s.label} ${formatEuro(s.value)}`).join(', ')}`}
     >
       <g transform="rotate(-90 100 100)">
         {drawn.map((slice) => {
@@ -371,7 +398,7 @@ function Donut({ slices, total, showTip, hideTip }: DonutProps) {
         {formatEuro(total)}
       </text>
       <text x="100" y="115" textAnchor="middle" className="cost-donut-hint">
-        planned
+        {t('costs.plannedLower')}
       </text>
     </svg>
   )

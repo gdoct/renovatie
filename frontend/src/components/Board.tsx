@@ -1,7 +1,8 @@
 import { Fragment, useState } from 'react'
 import type { DragEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Feature, PBI, Room, Status, User } from '../api'
-import { comparePriority, costAmount, formatEuro, STATUSES, STATUS_LABELS } from '../api'
+import { comparePriority, costAmount, formatEuro, STATUSES } from '../api'
 
 interface BoardProps {
   pbis: PBI[]
@@ -44,6 +45,7 @@ export function Board({
   onToggleCost,
   onSelect,
 }: BoardProps) {
+  const { t } = useTranslation()
   const [draggingId, setDraggingId] = useState<number | null>(null)
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null)
   const [hiddenColumns, setHiddenColumns] = useState<Status[]>(loadHiddenColumns)
@@ -94,7 +96,7 @@ export function Board({
               key={status}
               type="button"
               className="column column-collapsed"
-              title={`Show ${STATUS_LABELS[status]}`}
+              title={t('board.showColumn', { column: t(`status.${status}`) })}
               onClick={() => toggleColumn(status)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
@@ -104,7 +106,7 @@ export function Board({
                 if (!Number.isNaN(id)) onMove(id, status)
               }}
             >
-              <span className="collapsed-label">{STATUS_LABELS[status]}</span>
+              <span className="collapsed-label">{t(`status.${status}`)}</span>
               <span className="count">{cards.length}</span>
             </button>
           )
@@ -123,13 +125,13 @@ export function Board({
             onDrop={(e) => handleDrop(e, status, cards)}
           >
             <h2 className="column-title">
-              {STATUS_LABELS[status]}
+              {t(`status.${status}`)}
               <span className="count">{cards.length}</span>
               {HIDEABLE_STATUSES.includes(status) && (
                 <button
                   type="button"
                   className="column-hide"
-                  title={`Hide ${STATUS_LABELS[status]}`}
+                  title={t('board.hideColumn', { column: t(`status.${status}`) })}
                   onClick={() => toggleColumn(status)}
                 >
                   {status === 'done' ? '»' : '«'}
@@ -203,7 +205,8 @@ function PBICard({
   onToggleCost,
   onSelect,
 }: PBICardProps) {
-  const doneTasks = pbi.tasks.filter((t) => t.status === 'done').length
+  const { t } = useTranslation()
+  const doneTasks = pbi.tasks.filter((task) => task.status === 'done').length
   const assignee = users.find((u) => u.id === pbi.assignee_id)
   const spent = pbi.costs.filter((c) => c.purchased).reduce((sum, c) => sum + costAmount(c), 0)
   const planned = pbi.costs.reduce((sum, c) => sum + costAmount(c), 0)
@@ -223,11 +226,11 @@ function PBICard({
         {feature && <span className="badge badge-feature">{feature.name}</span>}
         {pbi.tasks.length > 0 && (
           <span className="badge badge-tasks">
-            {doneTasks}/{pbi.tasks.length} tasks
+            {t('board.tasksCount', { done: doneTasks, total: pbi.tasks.length })}
           </span>
         )}
         {pbi.costs.length > 0 && (
-          <span className="badge badge-costs" title="Spent / planned">
+          <span className="badge badge-costs" title={t('board.spentPlanned')}>
             {formatEuro(spent)} / {formatEuro(planned)}
           </span>
         )}
@@ -239,10 +242,10 @@ function PBICard({
         <select
           className="assignee-select"
           value={pbi.assignee_id ?? ''}
-          title="Assignee"
+          title={t('common.assignee')}
           onChange={(e) => onAssign(pbi.id, e.target.value === '' ? null : Number(e.target.value))}
         >
-          <option value="">Unassigned</option>
+          <option value="">{t('common.unassigned')}</option>
           {users.map((user) => (
             <option key={user.id} value={user.id}>
               {user.name}
@@ -258,7 +261,7 @@ function PBICard({
                 type="checkbox"
                 className="cost-check"
                 checked={cost.purchased}
-                title={cost.purchased ? 'Mark as not purchased' : 'Mark as purchased'}
+                title={cost.purchased ? t('costs.markNotPurchased') : t('costs.markPurchased')}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => onToggleCost(cost.id, e.target.checked)}
               />
@@ -276,7 +279,7 @@ function PBICard({
                 type="checkbox"
                 className="task-check"
                 checked={task.status === 'done'}
-                title={task.status === 'done' ? 'Reopen task' : 'Mark task done'}
+                title={task.status === 'done' ? t('tasks.reopen') : t('tasks.markDone')}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => onToggleTask(task.id, e.target.checked)}
               />
