@@ -1,0 +1,12 @@
+# OS / editor strays
+.DS_Store
+*.swp
+*.log
+
+# Backups
+*.bak
+
+# Local environment
+.env
+.env.*
+!.env.example

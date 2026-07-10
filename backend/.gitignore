@@ -1,0 +1,19 @@
+# Uploaded images
+uploads/
+
+# Database (including backups)
+*.db
+*.db.bak
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Tooling
+.pyright/
+.ruff_cache/

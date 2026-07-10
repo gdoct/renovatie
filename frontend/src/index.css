@@ -1,0 +1,71 @@
+:root {
+  --bg: #f3f4f8;
+  --surface: #ffffff;
+  --surface-2: #eceef4;
+  --border: #d9dce4;
+  --text: #26282e;
+  --text-muted: #6b7080;
+  --accent: #2563eb;
+  --accent-soft: #dbeafe;
+  --danger: #dc2626;
+  --done: #16a34a;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(20, 24, 40, 0.12);
+
+  /* Ordinal status ramp (one blue hue, light→dark), validated for white surface */
+  --viz-todo: #86b6ef;
+  --viz-committed: #5f9eea;
+  --viz-progress: #3987e5;
+  --viz-done: #184f95;
+  --viz-fill: #2a78d6;
+  --viz-track: #cde2fb;
+
+  /* Categorical slots, CVD-validated in this fixed order — assign in order,
+     never cycle past slot 8; fold extras into the neutral "other" */
+  --cat-1: #2a78d6;
+  --cat-2: #1baf7a;
+  --cat-3: #eda100;
+  --cat-4: #008300;
+  --cat-5: #4a3aa7;
+  --cat-6: #e34948;
+  --cat-7: #e87ba4;
+  --cat-8: #eb6834;
+  --cat-other: #a3a8b4;
+
+  font-family:
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
