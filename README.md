@@ -2,6 +2,8 @@
 
 Kanban-style project management for house renovation projects. See [SPEC.md](SPEC.md) for the full spec.
 
+<img width="734" height="477" alt="image" src="https://github.com/user-attachments/assets/6c5d4642-0b3c-4af7-be12-9fb5ead5a590" />
+
 ## Running
 
 Backend (FastAPI + SQLite, managed with [uv](https://docs.astral.sh/uv/)):
