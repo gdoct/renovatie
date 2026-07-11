@@ -8,7 +8,7 @@ Kanban-style project management for house renovation projects. See [SPEC.md](SPE
 * Extremely easy to use — no setup beyond picking a name, and all changes are saved automatically
 * Kanban board with To Do / Committed / In Progress / Done columns; drag and drop to change status or reprioritize (priority is a single global order across the whole project)
 * Organize work by **room** and by **feature** — see at a glance what is still outstanding in each area of the house
-* PBIs carry tasks, an assignee, comments (with Markdown and image uploads), and costs
+* Work items carry tasks, an assignee, comments (with Markdown and image uploads), and costs
 * Cost tracking: estimated vs. actual price per purchase, a purchase checklist on each card, and a spending dashboard with planned/spent/remaining totals and a per-room breakdown
 * Progress at a glance: done/total counters per room and per feature in the sidebar (which doubles as a board filter), plus a dashboard with status and per-person workload charts
 * Backlog view for planning work that isn't on the board yet
