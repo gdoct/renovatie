@@ -17,7 +17,9 @@ export function ProjectSelect({ projects, onSelect, onOpenWizard }: ProjectSelec
         <LanguageToggle full />
       </div>
       <div className="user-select-panel">
-        <h1>Renovatie</h1>
+        <h1>
+          <img src="/favicon.svg" alt="Renovatie" className="login-logo" />
+        </h1>
         <p className="muted">{t('projectSelect.subtitle')}</p>
         <div className="user-select-list">
           {projects.map((project) => (

@@ -4,7 +4,14 @@ Kanban-style project management for house renovation projects. See [SPEC.md](SPE
 
 <img width="734" height="477" alt="image" src="https://github.com/user-attachments/assets/6c5d4642-0b3c-4af7-be12-9fb5ead5a590" />
 
-## Running
+# Features
+* Extremely easy to use
+* Kanban-style project management
+* No authentication, multi-user. Intended for your home network.
+* Drag and drop tasks between columns, add new tasks, edit task details, and upload images to tasks. All changes are saved automatically.
+
+
+## Running the app locally
 
 Backend (FastAPI + SQLite, managed with [uv](https://docs.astral.sh/uv/)):
 

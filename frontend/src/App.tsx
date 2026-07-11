@@ -293,6 +293,7 @@ function App() {
             title={t('app.switchProject')}
             onClick={() => selectProject(null)}
           >
+            <img src="/favicon.svg" alt="" className="brand-logo" />
             {currentProject.name}
           </button>
           {(view === 'board' || view === 'backlog') && (
