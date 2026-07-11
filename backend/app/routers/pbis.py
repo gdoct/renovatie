@@ -65,6 +65,8 @@ def list_pbis(
         query = query.where(models.PBI.feature_id == feature_id)
     if status is not None:
         query = query.where(models.PBI.status == status)
+    else:
+        query = query.where(models.PBI.status != "deleted")
     return db.scalars(query).all()
 
 
@@ -137,6 +139,7 @@ def update_pbi(pbi_id: int, payload: schemas.PBIUpdate, db: DbSession) -> models
 
 @router.delete("/{pbi_id}", status_code=204)
 def delete_pbi(pbi_id: int, db: DbSession) -> None:
+    """Soft delete: the PBI and its tasks/costs/comments are kept but hidden."""
     pbi = get_pbi_or_404(db, pbi_id)
-    delete_pbi_cascade(db, pbi)
+    pbi.status = "deleted"
     db.commit()

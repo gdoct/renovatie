@@ -43,7 +43,7 @@
   "app": {
     "switchProject": "Switch project",
     "switchUser": "Switch user",
-    "newPbi": "+ New PBI",
+    "newPbi": "+ Add work",
     "projectSettings": "Project settings",
     "welcome": "Welcome to {{name}}",
     "welcomeHint": "Open the project settings (⚙ top right) to add rooms, then create your first PBI."
@@ -71,7 +71,8 @@
     "hideFilters": "Hide filters",
     "allRooms": "All rooms",
     "allFeatures": "All features",
-    "everyone": "Everyone"
+    "everyone": "Everyone",
+    "shiftClickHint": "Shift-click to select multiple"
   },
   "board": {
     "showColumn": "Show {{column}}",
@@ -93,22 +94,22 @@
     "greetingMorning": "Good morning, {{name}}",
     "greetingAfternoon": "Good afternoon, {{name}}",
     "greetingEvening": "Good evening, {{name}}",
-    "percentDone": "{{percent}}% of PBIs done",
-    "pbisDone": "{{done}} of {{total}} PBIs done",
+    "percentDone": "{{percent}}% of work items done",
+    "pbisDone": "{{done}} of {{total}} work items done",
     "openTasks_one": "{{count}} open task",
     "openTasks_other": "{{count}} open tasks",
     "assignedToYou": "{{count}} assigned to you",
     "tileAssigned": "Assigned to you",
-    "tileAssignedHint": "open PBIs",
+    "tileAssignedHint": "open work items",
     "tileOpenTasks": "Your open tasks",
     "tileOpenTasksHint": "across all PBIs",
     "tileInProgress": "In progress",
-    "tileInProgressHint": "PBIs house-wide",
+    "tileInProgressHint": "Work house-wide",
     "tileUnassigned": "Unassigned",
-    "tileUnassignedHint": "open PBIs, no owner",
-    "byStatus": "PBIs by status",
-    "noPbis": "No PBIs yet.",
-    "noPbisShort": "No PBIs yet",
+    "tileUnassignedHint": "open work items, no owner",
+    "byStatus": "Work items by status",
+    "noPbis": "No work items yet.",
+    "noPbisShort": "No work items yet",
     "workload": "Workload by person",
     "noRooms": "No rooms yet — add one in the project settings."
   },
@@ -151,14 +152,15 @@
     "markDone": "Mark task done"
   },
   "pbi": {
-    "modalTitle": "PBI #{{id}}",
+    "modalTitle": "Work item #{{id}}",
     "costsTotal": "{{spent}} spent / {{planned}} planned",
     "noCosts": "No costs yet.",
     "addCostPlaceholder": "Add a cost or purchase…",
     "estPlaceholder": "€ est.",
     "noTasks": "No tasks yet.",
     "addTaskPlaceholder": "Add a task…",
-    "delete": "Delete PBI"
+    "delete": "Delete work item",
+    "confirmDelete": "Delete work item \"{{title}}\"? It will disappear from the board, together with its tasks, costs and comments."
   },
   "task": {
     "modalTitle": "Task #{{id}}",
@@ -190,8 +192,8 @@
     "uploadError": "Could not upload image"
   },
   "newPbi": {
-    "title": "New PBI",
-    "needRoom": "Add a room in the project settings first — every PBI belongs to a room.",
+    "title": "New work item",
+    "needRoom": "Add a room in the project settings first — every work item belongs to a room.",
     "titlePlaceholder": "e.g. Tile the bathroom floor"
   },
   "wizard": {
@@ -209,8 +211,8 @@
   "config": {
     "project": "Project",
     "projectName": "Project name",
-    "pbiCount_one": "{{count}} PBI",
-    "pbiCount_other": "{{count}} PBIs",
+    "pbiCount_one": "{{count}} work item",
+    "pbiCount_other": "{{count}} work items",
     "addRoomPlaceholder": "Add room…",
     "addFeaturePlaceholder": "Add feature…",
     "admin": "Admin",
@@ -223,12 +225,12 @@
     "dangerText": "Deleting this project permanently removes all its rooms, features, PBIs, tasks, costs and comments. Type <bold>{{name}}</bold> to confirm.",
     "deleteProject": "Delete project",
     "rename": "Rename",
-    "roomHasPbis_one": "\"{{name}}\" still has {{count}} PBI; move or delete it first.",
-    "roomHasPbis_other": "\"{{name}}\" still has {{count}} PBIs; move or delete them first.",
+    "roomHasPbis_one": "\"{{name}}\" still has {{count}} work item; move or delete it first.",
+    "roomHasPbis_other": "\"{{name}}\" still has {{count}} work items; move or delete them first.",
     "confirmDeleteRoom": "Delete room \"{{name}}\"?",
     "confirmDeleteFeature": "Delete feature \"{{name}}\"?",
-    "featurePbisNote_one": " {{count}} PBI will keep existing without a feature.",
-    "featurePbisNote_other": " {{count}} PBIs will keep existing without a feature.",
+    "featurePbisNote_one": " {{count}} work item will keep existing without a feature.",
+    "featurePbisNote_other": " {{count}} work items will keep existing without a feature.",
     "confirmRemoveMember": "Remove {{name}} from this project? Their assignments in this project will be cleared.",
     "confirmDeleteUser": "Delete {{name}} everywhere? They will be removed from all projects and unassigned from all work."
   }

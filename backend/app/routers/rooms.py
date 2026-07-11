@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from .. import models, schemas
 from ..deps import DbSession
+from .pbis import delete_pbi_cascade
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
@@ -51,9 +52,13 @@ def update_room(room_id: int, payload: schemas.RoomUpdate, db: DbSession) -> mod
 @router.delete("/{room_id}", status_code=204)
 def delete_room(room_id: int, db: DbSession) -> None:
     room = get_room_or_404(db, room_id)
-    if room.pbis:
+    if any(pbi.status != "deleted" for pbi in room.pbis):
         raise HTTPException(
             status_code=409, detail="Room still has PBIs; move or delete them first"
         )
+    # Only soft-deleted PBIs remain; purge them for real so no rows keep
+    # referencing the room.
+    for pbi in list(room.pbis):
+        delete_pbi_cascade(db, pbi)
     db.delete(room)
     db.commit()

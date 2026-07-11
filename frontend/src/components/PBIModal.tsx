@@ -89,6 +89,11 @@ export function PBIModal({
     setNewCostEstimate('')
   }
 
+  const confirmDelete = () => {
+    if (!window.confirm(t('pbi.confirmDelete', { title: pbi.title }))) return
+    onDelete()
+  }
+
   const spent = pbi.costs.filter((c) => c.purchased).reduce((sum, c) => sum + costAmount(c), 0)
   const planned = pbi.costs.reduce((sum, c) => sum + costAmount(c), 0)
 
@@ -242,7 +247,7 @@ export function PBIModal({
         />
 
         <div className="modal-actions">
-          <button type="button" className="danger" onClick={onDelete}>
+          <button type="button" className="danger" onClick={confirmDelete}>
             {t('pbi.delete')}
           </button>
           <button type="button" className="primary" onClick={onClose}>

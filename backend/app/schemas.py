@@ -3,7 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-Status = Literal["todo", "committed", "in_progress", "done"]
+# "deleted" is a soft-delete state: hidden from listings by default, rows kept.
+Status = Literal["todo", "committed", "in_progress", "done", "deleted"]
 EntityType = Literal["pbi", "task", "feature", "cost"]
 
 

@@ -31,7 +31,7 @@
     "nl": "Nederlands"
   },
   "status": {
-    "todo": "Backlog",
+    "todo": "Klussenlijst",
     "committed": "Toegezegd",
     "in_progress": "In uitvoering",
     "done": "Klaar"
@@ -43,14 +43,14 @@
   "app": {
     "switchProject": "Wissel van project",
     "switchUser": "Wissel van gebruiker",
-    "newPbi": "+ Nieuwe PBI",
+    "newPbi": "+ Nieuwe Klus",
     "projectSettings": "Projectinstellingen",
     "welcome": "Welkom bij {{name}}",
     "welcomeHint": "Open de projectinstellingen (⚙ rechtsboven) om kamers toe te voegen en maak daarna je eerste PBI aan."
   },
   "nav": {
     "board": "Bord",
-    "backlog": "Backlog",
+    "backlog": "Klussenlijst",
     "dashboard": "Dashboard",
     "costs": "Kosten"
   },
@@ -71,7 +71,8 @@
     "hideFilters": "Verberg filters",
     "allRooms": "Alle kamers",
     "allFeatures": "Alle features",
-    "everyone": "Iedereen"
+    "everyone": "Iedereen",
+    "shiftClickHint": "Shift-klik om meerdere te selecteren"
   },
   "board": {
     "showColumn": "Toon {{column}}",
@@ -80,35 +81,35 @@
     "spentPlanned": "Uitgegeven / gepland"
   },
   "backlog": {
-    "emptyFiltered": "Geen werkitems voldoen aan de huidige filters.",
+    "emptyFiltered": "Geen klussen voldoen aan de huidige filters.",
     "searchPlaceholder": "Filter op naam…",
     "itemCount_one": "{{count}} item",
     "itemCount_other": "{{count}} items",
     "itemCountFiltered": "{{shown}} van {{total}} items",
-    "workItem": "Werkitem",
-    "noMatch": "Geen werkitems gevonden voor “{{query}}”."
+    "workItem": "Klus",
+    "noMatch": "Geen klussen gevonden voor “{{query}}”."
   },
   "dashboard": {
     "greetingNight": "Goedenacht, {{name}}",
     "greetingMorning": "Goedemorgen, {{name}}",
     "greetingAfternoon": "Goedemiddag, {{name}}",
     "greetingEvening": "Goedenavond, {{name}}",
-    "percentDone": "{{percent}}% van de PBI's klaar",
-    "pbisDone": "{{done}} van {{total}} PBI's klaar",
+    "percentDone": "{{percent}}% van de klussen klaar",
+    "pbisDone": "{{done}} van {{total}} klussen klaar",
     "openTasks_one": "{{count}} open taak",
     "openTasks_other": "{{count}} open taken",
     "assignedToYou": "{{count}} aan jou toegewezen",
     "tileAssigned": "Aan jou toegewezen",
-    "tileAssignedHint": "open PBI's",
+    "tileAssignedHint": "open klussen",
     "tileOpenTasks": "Jouw open taken",
-    "tileOpenTasksHint": "over alle PBI's",
+    "tileOpenTasksHint": "over alle klussen",
     "tileInProgress": "In uitvoering",
-    "tileInProgressHint": "PBI's in het hele huis",
+    "tileInProgressHint": "Klussen in het hele huis",
     "tileUnassigned": "Niet toegewezen",
-    "tileUnassignedHint": "open PBI's zonder eigenaar",
-    "byStatus": "PBI's per status",
-    "noPbis": "Nog geen PBI's.",
-    "noPbisShort": "Nog geen PBI's",
+    "tileUnassignedHint": "open klussen zonder eigenaar",
+    "byStatus": "Klussen per status",
+    "noPbis": "Nog geen klussen.",
+    "noPbisShort": "Nog geen klussen",
     "workload": "Werkverdeling per persoon",
     "noRooms": "Nog geen kamers — voeg er een toe via de projectinstellingen."
   },
@@ -127,7 +128,7 @@
     "tilePurchased": "Gekocht",
     "tilePurchasedHint": "afgevinkte items",
     "perRoom": "Kosten per kamer",
-    "emptyPie": "Nog geen kosten — voeg ze toe op een PBI.",
+    "emptyPie": "Nog geen kosten — voeg ze toe aan een klus.",
     "noRoomsSelected": "Geen kamers geselecteerd — vink een kamer aan om mee te tellen.",
     "noAmounts": "Nog geen bedragen voor de geselecteerde kamers.",
     "sliceTip": "{{label}} — {{planned}} gepland · {{spent}} uitgegeven",
@@ -151,14 +152,15 @@
     "markDone": "Taak afvinken"
   },
   "pbi": {
-    "modalTitle": "PBI #{{id}}",
+    "modalTitle": "Klus #{{id}}",
     "costsTotal": "{{spent}} uitgegeven / {{planned}} gepland",
     "noCosts": "Nog geen kosten.",
     "addCostPlaceholder": "Kostenpost of aankoop toevoegen…",
     "estPlaceholder": "€ schatting",
     "noTasks": "Nog geen taken.",
     "addTaskPlaceholder": "Taak toevoegen…",
-    "delete": "PBI verwijderen"
+    "delete": "Klus verwijderen",
+    "confirmDelete": "Klus \"{{title}}\" verwijderen? De klus verdwijnt van het bord, samen met de taken, kosten en reacties."
   },
   "task": {
     "modalTitle": "Taak #{{id}}",
@@ -209,8 +211,8 @@
   "config": {
     "project": "Project",
     "projectName": "Projectnaam",
-    "pbiCount_one": "{{count}} PBI",
-    "pbiCount_other": "{{count}} PBI's",
+    "pbiCount_one": "{{count}} klus",
+    "pbiCount_other": "{{count}} klussen",
     "addRoomPlaceholder": "Kamer toevoegen…",
     "addFeaturePlaceholder": "Feature toevoegen…",
     "admin": "Beheerder",
@@ -223,12 +225,12 @@
     "dangerText": "Als je dit project verwijdert, worden alle kamers, features, PBI's, taken, kosten en reacties permanent verwijderd. Typ <bold>{{name}}</bold> ter bevestiging.",
     "deleteProject": "Project verwijderen",
     "rename": "Hernoemen",
-    "roomHasPbis_one": "\"{{name}}\" heeft nog {{count}} PBI; verplaats of verwijder die eerst.",
-    "roomHasPbis_other": "\"{{name}}\" heeft nog {{count}} PBI's; verplaats of verwijder die eerst.",
+    "roomHasPbis_one": "\"{{name}}\" heeft nog {{count}} klus; verplaats of verwijder die eerst.",
+    "roomHasPbis_other": "\"{{name}}\" heeft nog {{count}} klussen; verplaats of verwijder die eerst.",
     "confirmDeleteRoom": "Kamer \"{{name}}\" verwijderen?",
     "confirmDeleteFeature": "Feature \"{{name}}\" verwijderen?",
-    "featurePbisNote_one": " {{count}} PBI blijft bestaan zonder feature.",
-    "featurePbisNote_other": " {{count}} PBI's blijven bestaan zonder feature.",
+    "featurePbisNote_one": " {{count}} klus blijft bestaan zonder feature.",
+    "featurePbisNote_other": " {{count}} klussen blijven bestaan zonder feature.",
     "confirmRemoveMember": "{{name}} uit dit project verwijderen? Hun toewijzingen in dit project worden gewist.",
     "confirmDeleteUser": "{{name}} overal verwijderen? Deze gebruiker wordt uit alle projecten verwijderd en van al het werk afgehaald."
   }

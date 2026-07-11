@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Feature, PBI, Room, User } from '../api'
 
@@ -6,6 +6,13 @@ export type AssigneeFilter = number | 'unassigned'
 
 function toggleValue<T>(values: T[], value: T): T[] {
   return values.includes(value) ? values.filter((v) => v !== value) : [...values, value]
+}
+
+// Plain click selects a single item (or clears it when it was the only selection);
+// shift-click toggles the item within a multi-selection.
+function selectValue<T>(values: T[], value: T, additive: boolean): T[] {
+  if (additive) return toggleValue(values, value)
+  return values.length === 1 && values[0] === value ? [] : [value]
 }
 
 interface SidebarProps {
@@ -93,7 +100,7 @@ export function Sidebar({
                 done={done}
                 total={total}
                 active={roomFilter.includes(room.id)}
-                onClick={() => onRoomFilter(toggleValue(roomFilter, room.id))}
+                onClick={(e) => onRoomFilter(selectValue(roomFilter, room.id, e.shiftKey))}
               />
             )
           })}
@@ -119,7 +126,7 @@ export function Sidebar({
                 done={done}
                 total={total}
                 active={featureFilter.includes(feature.id)}
-                onClick={() => onFeatureFilter(toggleValue(featureFilter, feature.id))}
+                onClick={(e) => onFeatureFilter(selectValue(featureFilter, feature.id, e.shiftKey))}
               />
             )
           })}
@@ -144,7 +151,7 @@ export function Sidebar({
               total={total}
               active={assigneeFilter.includes('unassigned')}
               avatar={<span className="avatar avatar-empty">?</span>}
-              onClick={() => onAssigneeFilter(toggleValue(assigneeFilter, 'unassigned'))}
+              onClick={(e) => onAssigneeFilter(selectValue(assigneeFilter, 'unassigned', e.shiftKey))}
             />
           )
         })()}
@@ -158,7 +165,7 @@ export function Sidebar({
               total={total}
               active={assigneeFilter.includes(user.id)}
               avatar={<span className="avatar">{user.name.charAt(0).toUpperCase()}</span>}
-              onClick={() => onAssigneeFilter(toggleValue(assigneeFilter, user.id))}
+              onClick={(e) => onAssigneeFilter(selectValue(assigneeFilter, user.id, e.shiftKey))}
             />
           )
         })}
@@ -173,15 +180,21 @@ interface FilterRowProps {
   total: number
   active: boolean
   avatar?: ReactNode
-  onClick: () => void
+  onClick: (event: MouseEvent<HTMLButtonElement>) => void
 }
 
 function FilterRow({ label, done, total, active, avatar, onClick }: FilterRowProps) {
+  const { t } = useTranslation()
   const percent = total === 0 ? 0 : Math.round((done / total) * 100)
   return (
     <div className={`filter-row${active ? ' active' : ''}`}>
       {avatar}
-      <button type="button" className="filter-main" onClick={onClick}>
+      <button
+        type="button"
+        className="filter-main"
+        title={t('sidebar.shiftClickHint')}
+        onClick={onClick}
+      >
         <span className="filter-label">
           {label}
           <span className="filter-count">
