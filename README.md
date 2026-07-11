@@ -5,10 +5,18 @@ Kanban-style project management for house renovation projects. See [SPEC.md](SPE
 <img width="734" height="477" alt="image" src="https://github.com/user-attachments/assets/6c5d4642-0b3c-4af7-be12-9fb5ead5a590" />
 
 # Features
-* Extremely easy to use
-* Kanban-style project management
-* No authentication, multi-user. Intended for your home network.
-* Drag and drop tasks between columns, add new tasks, edit task details, and upload images to tasks. All changes are saved automatically.
+* Extremely easy to use — no setup beyond picking a name, and all changes are saved automatically
+* Kanban board with To Do / Committed / In Progress / Done columns; drag and drop to change status or reprioritize (priority is a single global order across the whole project)
+* Organize work by **room** and by **feature** — see at a glance what is still outstanding in each area of the house
+* PBIs carry tasks, an assignee, comments (with Markdown and image uploads), and costs
+* Cost tracking: estimated vs. actual price per purchase, a purchase checklist on each card, and a spending dashboard with planned/spent/remaining totals and a per-room breakdown
+* Progress at a glance: done/total counters per room and per feature in the sidebar (which doubles as a board filter), plus a dashboard with status and per-person workload charts
+* Backlog view for planning work that isn't on the board yet
+* Multiple projects with a new-project wizard; deleted items are soft-deleted so nothing is lost by accident
+* Multi-user without authentication — intended for your trusted home network
+* Available in English and Dutch
+* Responsive layout, so you can update the board from your phone while standing in the room you're renovating
+* Ships as a single Docker image (frontend + API + SQLite), deployable with one script
 
 
 ## Running the app locally
