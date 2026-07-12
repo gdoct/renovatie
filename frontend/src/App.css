@@ -296,6 +296,20 @@ button.danger:hover {
   padding-left: 22px;
 }
 
+.floor-chevron {
+  border: none;
+  background: none;
+  padding: 0 2px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.floor-chevron:hover {
+  color: inherit;
+}
+
 .filter-main {
   flex: 1;
   min-width: 0;

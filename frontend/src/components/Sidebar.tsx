@@ -1,9 +1,22 @@
+import { useState } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Feature, PBI, Room, User } from '../api'
 import { groupByFloor, roomScope } from '../api'
 
 export type AssigneeFilter = number | 'unassigned'
+
+const COLLAPSED_FLOORS_KEY = 'sidebar.collapsedFloors'
+
+function loadCollapsedFloors(): number[] {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_FLOORS_KEY)
+    if (raw) return (JSON.parse(raw) as number[]).filter((id) => typeof id === 'number')
+  } catch {
+    // treat as none collapsed
+  }
+  return []
+}
 
 function toggleValue<T>(values: T[], value: T): T[] {
   return values.includes(value) ? values.filter((v) => v !== value) : [...values, value]
@@ -46,6 +59,16 @@ export function Sidebar({
   onAssigneeFilter,
 }: SidebarProps) {
   const { t } = useTranslation()
+  const [collapsedFloors, setCollapsedFloors] = useState<number[]>(loadCollapsedFloors)
+
+  const toggleFloor = (floorId: number) => {
+    setCollapsedFloors((current) => {
+      const next = toggleValue(current, floorId)
+      localStorage.setItem(COLLAPSED_FLOORS_KEY, JSON.stringify(next))
+      return next
+    })
+  }
+
   const progressFor = (predicate: (pbi: PBI) => boolean) => {
     const scoped = pbis.filter(predicate)
     const done = scoped.filter((p) => p.status === 'done').length
@@ -109,6 +132,7 @@ export function Sidebar({
             })
             if (group.floor === null) return rows
             const floor = group.floor
+            const isCollapsed = collapsedFloors.includes(floor.id)
             // A floor's progress spans its own PBIs plus those of its rooms.
             const scope = roomScope(rooms, floor.id)
             const { done, total } = progressFor((p) => scope.includes(p.room_id))
@@ -119,9 +143,22 @@ export function Sidebar({
                   done={done}
                   total={total}
                   active={roomFilter.includes(floor.id)}
+                  avatar={
+                    <button
+                      type="button"
+                      className="floor-chevron"
+                      title={t(isCollapsed ? 'sidebar.expandFloor' : 'sidebar.collapseFloor', {
+                        name: floor.name,
+                      })}
+                      aria-expanded={!isCollapsed}
+                      onClick={() => toggleFloor(floor.id)}
+                    >
+                      {isCollapsed ? '▸' : '▾'}
+                    </button>
+                  }
                   onClick={(e) => onRoomFilter(selectValue(roomFilter, floor.id, e.shiftKey))}
                 />
-                {rows}
+                {!isCollapsed && rows}
               </div>
             )
           })}

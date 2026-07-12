@@ -72,6 +72,8 @@
     "showFilters": "Show filters",
     "hideFilters": "Hide filters",
     "allRooms": "All rooms",
+    "collapseFloor": "Hide rooms on {{name}}",
+    "expandFloor": "Show rooms on {{name}}",
     "allFeatures": "All features",
     "everyone": "Everyone",
     "shiftClickHint": "Shift-click to select multiple"

@@ -72,6 +72,8 @@
     "showFilters": "Toon filters",
     "hideFilters": "Verberg filters",
     "allRooms": "Alle kamers",
+    "collapseFloor": "Kamers op {{name}} verbergen",
+    "expandFloor": "Kamers op {{name}} tonen",
     "allFeatures": "Alle features",
     "everyone": "Iedereen",
     "shiftClickHint": "Shift-klik om meerdere te selecteren"
