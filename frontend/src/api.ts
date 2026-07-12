@@ -7,9 +7,13 @@ export interface Project {
   created_at: string
 }
 
+// A floor is a room with is_floor set; regular rooms may point at a floor via
+// parent_id. PBIs reference either kind through their single room_id.
 export interface Room {
   id: number
   name: string
+  is_floor: boolean
+  parent_id: number | null
   project_id: number
 }
 
@@ -103,12 +107,16 @@ export const api = {
     request<void>(`/projects/${projectId}/users/${userId}`, { method: 'DELETE' }),
 
   listRooms: (projectId: number) => request<Room[]>(`/rooms?project_id=${projectId}`),
-  createRoom: (name: string, projectId: number) =>
+  createRoom: (
+    name: string,
+    projectId: number,
+    options?: Partial<{ is_floor: boolean; parent_id: number | null }>,
+  ) =>
     request<Room>('/rooms', {
       method: 'POST',
-      body: JSON.stringify({ name, project_id: projectId }),
+      body: JSON.stringify({ name, project_id: projectId, ...options }),
     }),
-  updateRoom: (id: number, payload: Partial<{ name: string }>) =>
+  updateRoom: (id: number, payload: Partial<{ name: string; parent_id: number | null }>) =>
     request<Room>(`/rooms/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   deleteRoom: (id: number) => request<void>(`/rooms/${id}`, { method: 'DELETE' }),
 
@@ -227,6 +235,33 @@ export const STATUSES: Status[] = ['todo', 'committed', 'in_progress', 'done']
 
 // Global board order: lower priority value first, id as tie-breaker.
 export const comparePriority = (a: PBI, b: PBI): number => a.priority - b.priority || a.id - b.id
+
+// Rooms grouped per floor, in the order the backend returns them (by name).
+// Rooms without a floor (or whose floor is gone) end up in a trailing group
+// with `floor: null`; floors without rooms still get their own group.
+export interface FloorGroup {
+  floor: Room | null
+  rooms: Room[]
+}
+
+export const groupByFloor = (rooms: Room[]): FloorGroup[] => {
+  const floors = rooms.filter((r) => r.is_floor)
+  const groups: FloorGroup[] = floors.map((floor) => ({
+    floor,
+    rooms: rooms.filter((r) => !r.is_floor && r.parent_id === floor.id),
+  }))
+  const ungrouped = rooms.filter((r) => !r.is_floor && !floors.some((f) => f.id === r.parent_id))
+  if (ungrouped.length > 0) groups.push({ floor: null, rooms: ungrouped })
+  return groups
+}
+
+// The room ids a room "covers": a floor covers itself plus its rooms, a
+// regular room only itself. Filtering by a floor thus includes PBIs assigned
+// to the floor directly and to any room on it.
+export const roomScope = (rooms: Room[], roomId: number): number[] => [
+  roomId,
+  ...rooms.filter((r) => r.parent_id === roomId).map((r) => r.id),
+]
 
 // The amount a cost item counts for: the actual price once known, the estimate before that.
 export const costAmount = (cost: Cost): number => cost.actual_cost ?? cost.estimated_cost ?? 0

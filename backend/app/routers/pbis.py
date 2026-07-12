@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 
 from .. import models, schemas
 from ..deps import DbSession
@@ -36,6 +37,16 @@ def check_user_exists(db: DbSession, user_id: int) -> None:
         raise HTTPException(status_code=404, detail="User not found")
 
 
+def get_live_pbi_or_error(db: DbSession, pbi_id: int) -> models.PBI:
+    """Fetch a PBI that new work may be attached to: 404 if missing, 409 if soft-deleted."""
+    pbi = db.get(models.PBI, pbi_id)
+    if pbi is None:
+        raise HTTPException(status_code=404, detail="PBI not found")
+    if pbi.status == "deleted":
+        raise HTTPException(status_code=409, detail="PBI is deleted")
+    return pbi
+
+
 def delete_pbi_cascade(db: DbSession, pbi: models.PBI) -> None:
     """Delete a PBI plus its own and its tasks'/costs' comments; caller commits."""
     for task in pbi.tasks:
@@ -56,6 +67,7 @@ def list_pbis(
 ) -> Sequence[models.PBI]:
     query = (
         select(models.PBI)
+        .options(selectinload(models.PBI.tasks), selectinload(models.PBI.costs))
         .where(models.PBI.project_id == project_id)
         .order_by(models.PBI.priority, models.PBI.id)
     )
@@ -81,17 +93,13 @@ def create_pbi(payload: schemas.PBICreate, db: DbSession) -> models.PBI:
     if payload.feature_id is not None:
         feature = get_feature_or_404(db, payload.feature_id)
         if feature.project_id != room.project_id:
-            raise HTTPException(
-                status_code=422, detail="Feature belongs to a different project"
-            )
+            raise HTTPException(status_code=422, detail="Feature belongs to a different project")
     if payload.assignee_id is not None:
         check_user_exists(db, payload.assignee_id)
     priority = payload.priority
     if priority is None:
         lowest = db.scalar(
-            select(func.max(models.PBI.priority)).where(
-                models.PBI.project_id == room.project_id
-            )
+            select(func.max(models.PBI.priority)).where(models.PBI.project_id == room.project_id)
         )
         priority = (lowest or 0) + 1
     pbi = models.PBI(
@@ -113,6 +121,11 @@ def create_pbi(payload: schemas.PBICreate, db: DbSession) -> models.PBI:
 def update_pbi(pbi_id: int, payload: schemas.PBIUpdate, db: DbSession) -> models.PBI:
     pbi = get_pbi_or_404(db, pbi_id)
     changes = payload.model_dump(exclude_unset=True)
+    # A soft-deleted PBI is read-only; the only PATCH it accepts is one that
+    # restores it (possibly editing other fields in the same request).
+    restoring = changes.get("status") not in (None, "deleted")
+    if pbi.status == "deleted" and not restoring:
+        raise HTTPException(status_code=409, detail="PBI is deleted; restore it first")
     if "room_id" in changes:
         if changes["room_id"] is None:
             raise HTTPException(status_code=422, detail="room_id cannot be null")
@@ -126,9 +139,7 @@ def update_pbi(pbi_id: int, payload: schemas.PBIUpdate, db: DbSession) -> models
     if changes.get("feature_id") is not None:
         feature = get_feature_or_404(db, changes["feature_id"])
         if feature.project_id != pbi.project_id:
-            raise HTTPException(
-                status_code=422, detail="Feature belongs to a different project"
-            )
+            raise HTTPException(status_code=422, detail="Feature belongs to a different project")
     if changes.get("assignee_id") is not None:
         check_user_exists(db, changes["assignee_id"])
     for field, value in changes.items():

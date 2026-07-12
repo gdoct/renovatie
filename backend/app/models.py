@@ -40,13 +40,24 @@ class User(Base):
 
 
 class Room(Base):
+    """A room, or — when is_floor is set — a floor that groups rooms.
+
+    A floor is a room like any other (PBIs can point at it directly); regular
+    rooms may reference a floor via parent_id. The hierarchy is one level deep:
+    floors never have a parent themselves.
+    """
+
     __tablename__ = "rooms"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
+    is_floor: Mapped[bool] = mapped_column(default=False)
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("rooms.id"), default=None)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"))
 
     project: Mapped[Project] = relationship(back_populates="rooms")
+    parent: Mapped["Room | None"] = relationship(back_populates="children", remote_side="Room.id")
+    children: Mapped[list["Room"]] = relationship(back_populates="parent")
     pbis: Mapped[list["PBI"]] = relationship(back_populates="room")
 
 

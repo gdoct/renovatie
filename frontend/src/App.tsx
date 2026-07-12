@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Feature, PBI, Project, Room, Status, User } from './api'
-import { api } from './api'
+import { api, roomScope } from './api'
 import { Backlog } from './components/Backlog'
 import { LanguageToggle } from './components/LanguageToggle'
 import { Board } from './components/Board'
@@ -147,11 +147,17 @@ function App() {
     [run],
   )
 
+  // A selected floor also covers the rooms on it.
+  const roomFilterScope = useMemo(
+    () => new Set(roomFilter.flatMap((id) => roomScope(rooms, id))),
+    [roomFilter, rooms],
+  )
+
   const visiblePbis = useMemo(
     () =>
       pbis.filter(
         (p) =>
-          (roomFilter.length === 0 || roomFilter.includes(p.room_id)) &&
+          (roomFilter.length === 0 || roomFilterScope.has(p.room_id)) &&
           (featureFilter.length === 0 ||
             (p.feature_id !== null && featureFilter.includes(p.feature_id))) &&
           (assigneeFilter.length === 0 ||
@@ -159,7 +165,7 @@ function App() {
               ? assigneeFilter.includes('unassigned')
               : assigneeFilter.includes(p.assignee_id))),
       ),
-    [pbis, roomFilter, featureFilter, assigneeFilter],
+    [pbis, roomFilter, roomFilterScope, featureFilter, assigneeFilter],
   )
 
   const selectedPbi =

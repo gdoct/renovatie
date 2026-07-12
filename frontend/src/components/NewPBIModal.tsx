@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Feature, Room, Status } from '../api'
 import { Modal } from './Modal'
+import { RoomOptions } from './RoomOptions'
 
 interface NewPBIModalProps {
   rooms: Room[]
@@ -72,11 +73,7 @@ export function NewPBIModal({
             <label>
               {t('common.room')}
               <select value={roomId ?? ''} onChange={(e) => setRoomId(Number(e.target.value))}>
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.name}
-                  </option>
-                ))}
+                <RoomOptions rooms={rooms} />
               </select>
             </label>
             <label>

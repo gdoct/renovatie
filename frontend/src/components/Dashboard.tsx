@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PBI, Room, Status, User } from '../api'
-import { STATUSES } from '../api'
+import { groupByFloor, roomScope, STATUSES } from '../api'
 
 interface DashboardProps {
   currentUser: User
@@ -151,52 +151,80 @@ export function Dashboard({ currentUser, users, rooms, pbis, onOpenRoom }: Dashb
 
       <h2 className="dash-section-title">{t('common.rooms')}</h2>
       {rooms.length === 0 && <p className="muted">{t('dashboard.noRooms')}</p>}
-      <section className="room-grid">
-        {rooms.map((room) => {
-          const roomPbis = pbis.filter((p) => p.room_id === room.id)
-          const counts = countByStatus(roomPbis)
-          const roomTotal = roomPbis.length
-          const percent = roomTotal === 0 ? 0 : Math.round((counts.done / roomTotal) * 100)
-          const roomOpenTasks = roomPbis
-            .flatMap((p) => p.tasks)
-            .filter((t) => t.status !== 'done').length
-          const mine = roomPbis.filter(
-            (p) => p.assignee_id === currentUser.id && p.status !== 'done',
-          ).length
-          return (
-            <button
-              key={room.id}
-              type="button"
-              className="room-card"
-              onClick={() => onOpenRoom(room.id)}
-            >
-              <span className="room-card-header">
-                <span className="room-card-name">{room.name}</span>
-                <span className="room-card-percent">{percent}%</span>
-              </span>
-              <span className="meter meter-sm">
-                <span className="meter-fill" style={{ width: `${percent}%` }} />
-              </span>
-              <span className="room-card-stats">
-                {roomTotal === 0 ? (
-                  <span className="muted">{t('dashboard.noPbisShort')}</span>
-                ) : (
-                  STATUSES.map((status) => (
-                    <span key={status} className="room-card-stat">
-                      <span className={`swatch swatch-${status}`} />
-                      {counts[status]} {t(`status.${status}`)}
-                    </span>
-                  ))
+      {groupByFloor(rooms).map((group, _, groups) => {
+        const floor = group.floor
+        // The floor itself gets a card only when PBIs are assigned to it directly.
+        const cardRooms =
+          floor && pbis.some((p) => p.room_id === floor.id) ? [floor, ...group.rooms] : group.rooms
+        const scopeIds = floor ? roomScope(rooms, floor.id) : group.rooms.map((r) => r.id)
+        const scoped = pbis.filter((p) => scopeIds.includes(p.room_id))
+        const scopedDone = scoped.filter((p) => p.status === 'done').length
+        return (
+          <Fragment key={floor ? `floor-${floor.id}` : 'no-floor'}>
+            {groups.length > 1 && (
+              <h3 className="dash-floor-title">
+                {floor ? floor.name : t('config.noFloor')}
+                {scoped.length > 0 && (
+                  <span className="dash-floor-count">
+                    {scopedDone}/{scoped.length}
+                  </span>
                 )}
-              </span>
-              <span className="room-card-foot">
-                {t('dashboard.openTasks', { count: roomOpenTasks })}
-                {mine > 0 && ` · ${t('dashboard.assignedToYou', { count: mine })}`}
-              </span>
-            </button>
-          )
-        })}
-      </section>
+              </h3>
+            )}
+            <section className="room-grid">
+              {cardRooms.map((room) => {
+                const roomPbis = pbis.filter((p) => p.room_id === room.id)
+                const counts = countByStatus(roomPbis)
+                const roomTotal = roomPbis.length
+                const percent = roomTotal === 0 ? 0 : Math.round((counts.done / roomTotal) * 100)
+                const roomOpenTasks = roomPbis
+                  .flatMap((p) => p.tasks)
+                  .filter((t) => t.status !== 'done').length
+                const mine = roomPbis.filter(
+                  (p) => p.assignee_id === currentUser.id && p.status !== 'done',
+                ).length
+                return (
+                  <button
+                    key={room.id}
+                    type="button"
+                    className="room-card"
+                    onClick={() => onOpenRoom(room.id)}
+                  >
+                    <span className="room-card-header">
+                      <span className="room-card-name">
+                        {room.name}
+                        {room.is_floor && (
+                          <span className="muted"> · {t('common.entireFloor')}</span>
+                        )}
+                      </span>
+                      <span className="room-card-percent">{percent}%</span>
+                    </span>
+                    <span className="meter meter-sm">
+                      <span className="meter-fill" style={{ width: `${percent}%` }} />
+                    </span>
+                    <span className="room-card-stats">
+                      {roomTotal === 0 ? (
+                        <span className="muted">{t('dashboard.noPbisShort')}</span>
+                      ) : (
+                        STATUSES.map((status) => (
+                          <span key={status} className="room-card-stat">
+                            <span className={`swatch swatch-${status}`} />
+                            {counts[status]} {t(`status.${status}`)}
+                          </span>
+                        ))
+                      )}
+                    </span>
+                    <span className="room-card-foot">
+                      {t('dashboard.openTasks', { count: roomOpenTasks })}
+                      {mine > 0 && ` · ${t('dashboard.assignedToYou', { count: mine })}`}
+                    </span>
+                  </button>
+                )
+              })}
+            </section>
+          </Fragment>
+        )
+      })}
 
       {tip && (
         <div className="viz-tooltip" style={{ left: tip.x + 12, top: tip.y + 14 }}>

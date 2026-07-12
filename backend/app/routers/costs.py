@@ -6,6 +6,7 @@ from sqlalchemy import select
 from .. import models, schemas
 from ..deps import DbSession
 from .comments import delete_comments_for
+from .pbis import get_live_pbi_or_error
 
 router = APIRouter(prefix="/costs", tags=["costs"])
 
@@ -19,7 +20,13 @@ def get_cost_or_404(db: DbSession, cost_id: int) -> models.Cost:
 
 @router.get("", response_model=list[schemas.CostRead])
 def list_costs(db: DbSession, pbi_id: int | None = None) -> Sequence[models.Cost]:
-    query = select(models.Cost).order_by(models.Cost.id)
+    # Costs of soft-deleted PBIs are hidden along with their parent.
+    query = (
+        select(models.Cost)
+        .join(models.PBI)
+        .where(models.PBI.status != "deleted")
+        .order_by(models.Cost.id)
+    )
     if pbi_id is not None:
         query = query.where(models.Cost.pbi_id == pbi_id)
     return db.scalars(query).all()
@@ -27,8 +34,7 @@ def list_costs(db: DbSession, pbi_id: int | None = None) -> Sequence[models.Cost
 
 @router.post("", response_model=schemas.CostRead, status_code=201)
 def create_cost(payload: schemas.CostCreate, db: DbSession) -> models.Cost:
-    if db.get(models.PBI, payload.pbi_id) is None:
-        raise HTTPException(status_code=404, detail="PBI not found")
+    get_live_pbi_or_error(db, payload.pbi_id)
     cost = models.Cost(
         title=payload.title,
         reason=payload.reason,

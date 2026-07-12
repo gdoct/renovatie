@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import type { MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Cost, PBI, Room } from '../api'
-import { costAmount, formatEuro } from '../api'
+import { costAmount, formatEuro, roomScope } from '../api'
+import { RoomOptions } from './RoomOptions'
 
 interface CostDashboardProps {
   rooms: Room[]
@@ -135,10 +136,12 @@ export function CostDashboard({ rooms, pbis, onToggleCost, onSelectCost }: CostD
   }
   const pieTotal = checkedRows.reduce((total, row) => total + row.total, 0)
 
+  // Filtering by a floor includes its own costs plus those of its rooms.
+  const roomFilterScope = roomFilter === null ? null : roomScope(rooms, roomFilter)
   const listed = entries
     .filter(
       (e) =>
-        (roomFilter === null || e.room?.id === roomFilter) &&
+        (roomFilterScope === null || (e.room !== null && roomFilterScope.includes(e.room.id))) &&
         (purchasedFilter === 'all' ||
           (purchasedFilter === 'purchased' ? e.cost.purchased : !e.cost.purchased)),
     )
@@ -252,11 +255,7 @@ export function CostDashboard({ rooms, pbis, onToggleCost, onSelectCost }: CostD
             onChange={(e) => setRoomFilter(e.target.value === '' ? null : Number(e.target.value))}
           >
             <option value="">{t('sidebar.allRooms')}</option>
-            {rooms.map((room) => (
-              <option key={room.id} value={room.id}>
-                {room.name}
-              </option>
-            ))}
+            <RoomOptions rooms={rooms} />
           </select>
           <select
             value={purchasedFilter}

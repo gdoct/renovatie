@@ -42,6 +42,8 @@ MIGRATIONS: dict[str, dict[str, list[str]]] = {
             "INSERT OR IGNORE INTO project_users (project_id, user_id) "
             "SELECT (SELECT min(id) FROM projects), id FROM users",
         ],
+        "is_floor": ["ALTER TABLE rooms ADD COLUMN is_floor BOOLEAN NOT NULL DEFAULT 0"],
+        "parent_id": ["ALTER TABLE rooms ADD COLUMN parent_id INTEGER REFERENCES rooms(id)"],
     },
     "features": {
         "project_id": [

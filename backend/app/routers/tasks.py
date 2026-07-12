@@ -6,6 +6,7 @@ from sqlalchemy import select
 from .. import models, schemas
 from ..deps import DbSession
 from .comments import delete_comments_for
+from .pbis import get_live_pbi_or_error
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -28,7 +29,13 @@ def list_tasks(
     pbi_id: int | None = None,
     assignee_id: int | None = None,
 ) -> Sequence[models.Task]:
-    query = select(models.Task).order_by(models.Task.id)
+    # Tasks of soft-deleted PBIs are hidden along with their parent.
+    query = (
+        select(models.Task)
+        .join(models.PBI)
+        .where(models.PBI.status != "deleted")
+        .order_by(models.Task.id)
+    )
     if pbi_id is not None:
         query = query.where(models.Task.pbi_id == pbi_id)
     if assignee_id is not None:
@@ -38,8 +45,7 @@ def list_tasks(
 
 @router.post("", response_model=schemas.TaskRead, status_code=201)
 def create_task(payload: schemas.TaskCreate, db: DbSession) -> models.Task:
-    if db.get(models.PBI, payload.pbi_id) is None:
-        raise HTTPException(status_code=404, detail="PBI not found")
+    get_live_pbi_or_error(db, payload.pbi_id)
     if payload.assignee_id is not None:
         check_user_exists(db, payload.assignee_id)
     task = models.Task(

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import type { Feature, PBI, Project, Room, User } from '../api'
-import { api } from '../api'
+import { api, groupByFloor } from '../api'
 
 interface ProjectConfigProps {
   project: Project
@@ -46,6 +46,10 @@ export function ProjectConfig({
     pbis.filter((p) => p.feature_id === featureId).length
 
   const deleteRoom = (room: Room) => {
+    if (room.is_floor && rooms.some((r) => r.parent_id === room.id)) {
+      window.alert(t('config.floorHasRooms', { name: room.name }))
+      return
+    }
     const count = pbiCountForRoom(room.id)
     if (count > 0) {
       window.alert(t('config.roomHasPbis', { name: room.name, count }))
@@ -54,6 +58,11 @@ export function ProjectConfig({
     if (!window.confirm(t('config.confirmDeleteRoom', { name: room.name }))) return
     void run(() => api.deleteRoom(room.id))
   }
+
+  const floors = rooms.filter((r) => r.is_floor)
+
+  const moveRoomToFloor = (room: Room, parentId: number | null) =>
+    void run(() => api.updateRoom(room.id, { parent_id: parentId }))
 
   const deleteFeature = (feature: Feature) => {
     const count = pbiCountForFeature(feature.id)
@@ -104,24 +113,76 @@ export function ProjectConfig({
         <section className="config-section">
           <h2>{t('common.rooms')}</h2>
           <ul className="config-list">
-            {rooms.map((room) => (
-              <li key={room.id} className="config-row">
-                <InlineRename
-                  value={room.name}
-                  onSave={(name) => run(() => api.updateRoom(room.id, { name }))}
-                />
-                <span className="muted">
-                  {t('config.pbiCount', { count: pbiCountForRoom(room.id) })}
-                </span>
-                <button type="button" className="danger small" onClick={() => deleteRoom(room)}>
-                  {t('common.delete')}
-                </button>
-              </li>
-            ))}
+            {groupByFloor(rooms).map((group) => {
+              const roomRow = (room: Room) => (
+                <li
+                  key={room.id}
+                  className={`config-row${group.floor ? ' config-row-nested' : ''}`}
+                >
+                  <InlineRename
+                    value={room.name}
+                    onSave={(name) => run(() => api.updateRoom(room.id, { name }))}
+                  />
+                  {floors.length > 0 && (
+                    <select
+                      className="config-floor-select"
+                      title={t('common.floor')}
+                      value={room.parent_id ?? ''}
+                      onChange={(e) =>
+                        moveRoomToFloor(room, e.target.value === '' ? null : Number(e.target.value))
+                      }
+                    >
+                      <option value="">{t('config.noFloor')}</option>
+                      {floors.map((floor) => (
+                        <option key={floor.id} value={floor.id}>
+                          {floor.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <span className="muted">
+                    {t('config.pbiCount', { count: pbiCountForRoom(room.id) })}
+                  </span>
+                  <button type="button" className="danger small" onClick={() => deleteRoom(room)}>
+                    {t('common.delete')}
+                  </button>
+                </li>
+              )
+              if (group.floor === null) return group.rooms.map(roomRow)
+              const floor = group.floor
+              return (
+                <Fragment key={`floor-${floor.id}`}>
+                  <li className="config-row config-row-floor">
+                    <InlineRename
+                      value={floor.name}
+                      onSave={(name) => run(() => api.updateRoom(floor.id, { name }))}
+                    />
+                    <span className="admin-badge">{t('common.floor')}</span>
+                    <span className="muted">
+                      {t('config.pbiCount', { count: pbiCountForRoom(floor.id) })}
+                    </span>
+                    <button
+                      type="button"
+                      className="danger small"
+                      onClick={() => deleteRoom(floor)}
+                    >
+                      {t('common.delete')}
+                    </button>
+                  </li>
+                  {group.rooms.map(roomRow)}
+                </Fragment>
+              )
+            })}
           </ul>
+          <AddRoomForm
+            floors={floors}
+            onAdd={(name, parentId) =>
+              run(() => api.createRoom(name, project.id, { parent_id: parentId }))
+            }
+          />
           <AddForm
-            placeholder={t('config.addRoomPlaceholder')}
-            onAdd={(name) => run(() => api.createRoom(name, project.id))}
+            placeholder={t('config.addFloorPlaceholder')}
+            onAdd={(name) => run(() => api.createRoom(name, project.id, { is_floor: true }))}
           />
         </section>
 
@@ -323,6 +384,58 @@ function InlineRename({ value, onSave }: InlineRenameProps) {
       />
       <button type="submit" onMouseDown={(e) => e.preventDefault()} disabled={!draft.trim()}>
         {t('common.save')}
+      </button>
+    </form>
+  )
+}
+
+interface AddRoomFormProps {
+  floors: Room[]
+  onAdd: (name: string, parentId: number | null) => Promise<void> | void
+}
+
+// Add-room form with a floor picker; the chosen floor sticks so several rooms
+// can be added to the same floor in a row.
+function AddRoomForm({ floors, onAdd }: AddRoomFormProps) {
+  const { t } = useTranslation()
+  const [name, setName] = useState('')
+  const [parentId, setParentId] = useState<number | null>(null)
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    const trimmed = name.trim()
+    if (!trimmed) return
+    void onAdd(
+      trimmed,
+      parentId !== null && floors.some((f) => f.id === parentId) ? parentId : null,
+    )
+    setName('')
+  }
+
+  return (
+    <form className="add-form" onSubmit={submit}>
+      <input
+        value={name}
+        placeholder={t('config.addRoomPlaceholder')}
+        onChange={(e) => setName(e.target.value)}
+      />
+      {floors.length > 0 && (
+        <select
+          className="config-floor-select"
+          title={t('common.floor')}
+          value={parentId ?? ''}
+          onChange={(e) => setParentId(e.target.value === '' ? null : Number(e.target.value))}
+        >
+          <option value="">{t('config.noFloor')}</option>
+          {floors.map((floor) => (
+            <option key={floor.id} value={floor.id}>
+              {floor.name}
+            </option>
+          ))}
+        </select>
+      )}
+      <button type="submit" disabled={!name.trim()}>
+        +
       </button>
     </form>
   )

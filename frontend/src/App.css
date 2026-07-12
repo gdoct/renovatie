@@ -291,6 +291,11 @@ button.danger:hover {
   background: var(--accent-soft);
 }
 
+/* Rooms grouped under their floor in the sidebar. */
+.filter-group .filter-row-nested {
+  padding-left: 22px;
+}
+
 .filter-main {
   flex: 1;
   min-width: 0;
@@ -937,6 +942,20 @@ button.danger:hover {
 .dash-section-title {
   font-size: 16px;
   margin: 0 0 12px;
+}
+
+.dash-floor-title {
+  font-size: 14px;
+  margin: 16px 0 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.dash-floor-count {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .room-grid {
@@ -1900,6 +1919,20 @@ button.danger:hover {
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
+}
+
+/* Rooms grouped under their floor in the project settings. */
+.config-row-nested {
+  margin-left: 22px;
+}
+
+.config-row-floor {
+  background: var(--surface-2);
+}
+
+.config-floor-select {
+  max-width: 160px;
+  font-size: 13px;
 }
 
 .config-row-label {

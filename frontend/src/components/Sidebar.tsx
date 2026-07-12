@@ -1,6 +1,7 @@
 import type { MouseEvent, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Feature, PBI, Room, User } from '../api'
+import { groupByFloor, roomScope } from '../api'
 
 export type AssigneeFilter = number | 'unassigned'
 
@@ -91,17 +92,37 @@ export function Sidebar({
           {t('sidebar.allRooms')}
         </button>
         <div className="filter-list">
-          {rooms.map((room) => {
-            const { done, total } = progressFor((p) => p.room_id === room.id)
+          {groupByFloor(rooms).map((group) => {
+            const rows = group.rooms.map((room) => {
+              const { done, total } = progressFor((p) => p.room_id === room.id)
+              return (
+                <FilterRow
+                  key={room.id}
+                  label={room.name}
+                  done={done}
+                  total={total}
+                  active={roomFilter.includes(room.id)}
+                  nested={group.floor !== null}
+                  onClick={(e) => onRoomFilter(selectValue(roomFilter, room.id, e.shiftKey))}
+                />
+              )
+            })
+            if (group.floor === null) return rows
+            const floor = group.floor
+            // A floor's progress spans its own PBIs plus those of its rooms.
+            const scope = roomScope(rooms, floor.id)
+            const { done, total } = progressFor((p) => scope.includes(p.room_id))
             return (
-              <FilterRow
-                key={room.id}
-                label={room.name}
-                done={done}
-                total={total}
-                active={roomFilter.includes(room.id)}
-                onClick={(e) => onRoomFilter(selectValue(roomFilter, room.id, e.shiftKey))}
-              />
+              <div key={`floor-${floor.id}`} className="filter-group">
+                <FilterRow
+                  label={floor.name}
+                  done={done}
+                  total={total}
+                  active={roomFilter.includes(floor.id)}
+                  onClick={(e) => onRoomFilter(selectValue(roomFilter, floor.id, e.shiftKey))}
+                />
+                {rows}
+              </div>
             )
           })}
         </div>
@@ -151,7 +172,9 @@ export function Sidebar({
               total={total}
               active={assigneeFilter.includes('unassigned')}
               avatar={<span className="avatar avatar-empty">?</span>}
-              onClick={(e) => onAssigneeFilter(selectValue(assigneeFilter, 'unassigned', e.shiftKey))}
+              onClick={(e) =>
+                onAssigneeFilter(selectValue(assigneeFilter, 'unassigned', e.shiftKey))
+              }
             />
           )
         })()}
@@ -180,14 +203,15 @@ interface FilterRowProps {
   total: number
   active: boolean
   avatar?: ReactNode
+  nested?: boolean
   onClick: (event: MouseEvent<HTMLButtonElement>) => void
 }
 
-function FilterRow({ label, done, total, active, avatar, onClick }: FilterRowProps) {
+function FilterRow({ label, done, total, active, avatar, nested, onClick }: FilterRowProps) {
   const { t } = useTranslation()
   const percent = total === 0 ? 0 : Math.round((done / total) * 100)
   return (
-    <div className={`filter-row${active ? ' active' : ''}`}>
+    <div className={`filter-row${active ? ' active' : ''}${nested ? ' filter-row-nested' : ''}`}>
       {avatar}
       <button
         type="button"

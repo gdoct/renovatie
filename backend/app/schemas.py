@@ -45,10 +45,14 @@ class UserRead(BaseModel):
 class RoomCreate(BaseModel):
     name: str
     project_id: int
+    is_floor: bool = False
+    parent_id: int | None = None
 
 
 class RoomUpdate(BaseModel):
     name: str | None = None
+    # parent_id: absent = unchanged, null = detach from its floor.
+    parent_id: int | None = None
 
 
 class RoomRead(BaseModel):
@@ -56,6 +60,8 @@ class RoomRead(BaseModel):
 
     id: int
     name: str
+    is_floor: bool
+    parent_id: int | None
     project_id: int
 
 

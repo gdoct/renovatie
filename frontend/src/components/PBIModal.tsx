@@ -5,6 +5,7 @@ import type { Cost, Feature, PBI, Room, Status, Task, User } from '../api'
 import { costAmount, formatEuro, STATUSES } from '../api'
 import { CommentSection } from './CommentSection'
 import { Modal } from './Modal'
+import { RoomOptions } from './RoomOptions'
 
 interface PBIModalProps {
   pbi: PBI
@@ -133,11 +134,7 @@ export function PBIModal({
               value={pbi.room_id}
               onChange={(e) => onUpdate({ room_id: Number(e.target.value) })}
             >
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
+              <RoomOptions rooms={rooms} />
             </select>
           </label>
           <label>
