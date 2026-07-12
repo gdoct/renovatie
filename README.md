@@ -14,6 +14,7 @@ Kanban-style project management for house renovation projects. See [SPEC.md](SPE
 * Backlog view for planning work that isn't on the board yet
 * Multiple projects with a new-project wizard; deleted items are soft-deleted so nothing is lost by accident
 * Multi-user without authentication — intended for your trusted home network
+* Built-in [MCP server](MCP.md): manage the board in natural language from Claude (Desktop/Code) — "add 'request painter quote' to the bathroom", "what has the bathroom cost so far?"
 * Available in English and Dutch
 * Responsive layout, so you can update the board from your phone while standing in the room you're renovating
 * Ships as a single Docker image (frontend + API + SQLite), deployable with one script
@@ -61,6 +62,19 @@ Runtime configuration (environment variables):
 - `DATABASE_PATH` — SQLite file path (default `./renovatie.db`; `/data/renovatie.db` in the image)
 - `UPLOADS_DIR` — uploaded images directory (default `backend/uploads`; `/data/uploads` in the image)
 - `FRONTEND_DIST` — built frontend to serve (default `frontend/dist`; `/app/static` in the image)
+
+## Using it from Claude (MCP)
+
+The backend exposes its tools over MCP at `/mcp` (development) or `/api/mcp` (Docker
+deployment), so Claude Desktop and Claude Code can read and update the board directly —
+no API key or LLM configuration in the app itself. Quick start with Claude Code:
+
+```bash
+claude mcp add --transport http renovatie http://<host>:5567/api/mcp
+```
+
+See [MCP.md](MCP.md) for Claude Desktop setup, the full tool list, and security notes
+(the endpoint is unauthenticated, like the rest of the app — keep it on your trusted network).
 
 ## Quality tooling
 

@@ -5,31 +5,22 @@ proxy during development); here the API app is mounted at /api instead.
 """
 
 import os
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from .database import Base, engine
 from .main import app as api
-from .main import migrate
+
+# Mounted sub-apps do not get their lifespan run, so reuse the API's lifespan
+# (database init + MCP session manager) on this outer app.
+from .main import lifespan
 
 FRONTEND_DIST = Path(
     os.environ.get(
         "FRONTEND_DIST", Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
     )
 )
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-    # Mounted sub-apps do not get their lifespan run, so initialize the database here.
-    Base.metadata.create_all(bind=engine)
-    migrate()
-    yield
-
 
 app = FastAPI(lifespan=lifespan)
 app.mount("/api", api)

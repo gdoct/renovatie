@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect, text
 
 from .database import Base, engine
+from .mcp_server import mcp
 from .routers import comments, costs, features, pbis, projects, rooms, tasks, users
 
 UPLOADS_DIR = Path(
@@ -87,9 +88,14 @@ def migrate() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+    """Shared by app.main (dev) and app.serve (prod): mounted sub-apps never get
+    their lifespan run, so serve.py reuses this one for the whole stack."""
     Base.metadata.create_all(bind=engine)
     migrate()
-    yield
+    # The MCP streamable-HTTP transport only handles requests while its session
+    # manager is running.
+    async with mcp.session_manager.run():
+        yield
 
 
 app = FastAPI(title="Renovatie API", lifespan=lifespan)
@@ -112,6 +118,9 @@ app.include_router(comments.router)
 
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/images", StaticFiles(directory=UPLOADS_DIR), name="images")
+# MCP endpoint: /mcp in development, /api/mcp behind app.serve. Creating the
+# streamable-HTTP app here also instantiates mcp.session_manager for lifespan.
+app.mount("/mcp", mcp.streamable_http_app())
 
 
 @app.post("/uploads", status_code=201)
