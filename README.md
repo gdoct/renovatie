@@ -73,8 +73,12 @@ no API key or LLM configuration in the app itself. Quick start with Claude Code:
 claude mcp add --transport http renovatie http://<host>:5567/api/mcp
 ```
 
-See [MCP.md](MCP.md) for Claude Desktop setup, the full tool list, and security notes
-(the endpoint is unauthenticated, like the rest of the app — keep it on your trusted network).
+For Claude Desktop, use the local `mcp-remote` bridge described in [MCP.md](MCP.md) —
+Desktop's "custom connectors" are brokered by Anthropic's cloud and cannot reach LAN-only
+servers. `./setup-https.sh` provisions a local CA plus an nginx TLS proxy on the Docker
+host (port 8443) for encrypted, warning-free access. MCP.md also has the full tool list and
+security notes (the endpoint is unauthenticated, like the rest of the app — keep it on your
+trusted network).
 
 ## Quality tooling
 

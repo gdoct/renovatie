@@ -17,6 +17,7 @@ from typing import Any
 from fastapi import HTTPException
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
+from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -46,6 +47,11 @@ mcp = FastMCP(
     stateless_http=True,
     json_response=True,
     streamable_http_path="/",
+    # The SDK's DNS-rebinding protection only accepts localhost Host headers by
+    # default, which rejects LAN/reverse-proxied access (e.g. nuc-guido:8443).
+    # The REST API on this server is equally unauthenticated with open CORS, so
+    # Host pinning here adds no protection — the trust boundary is the network.
+    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
 )
 
 

@@ -10,3 +10,6 @@
 .env
 .env.*
 !.env.example
+
+# Local TLS material (setup-https.sh); ca.crt is safe to share, keys are not
+tls/
