@@ -44,7 +44,8 @@
   },
   "app": {
     "switchProject": "Switch project",
-    "switchUser": "Switch user",
+    "logout": "Log out",
+    "confirmLogout": "Log out?",
     "newPbi": "+ Add work",
     "projectSettings": "Project settings",
     "welcome": "Welcome to {{name}}",
@@ -53,19 +54,57 @@
   "nav": {
     "board": "Board",
     "backlog": "Backlog",
+    "timeline": "Timeline",
     "dashboard": "Dashboard",
     "costs": "Costs"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "zoomLabel": "Zoom level",
+    "zoom": {
+      "week": "Weeks",
+      "month": "Months",
+      "quarter": "Quarters"
+    },
+    "today": "Today",
+    "weekNumber": "W{{week}}",
+    "noFeatures": "No features yet",
+    "noFeaturesHint": "Create features in the project settings (⚙ top right), then plan them here.",
+    "unscheduled": "Not on the timeline yet",
+    "plan": "Plan",
+    "progressTip": "{{done}}/{{total}} done",
+    "conflictBadge": "Starts before a dependency is finished",
+    "openFeature": "Open feature details",
+    "startDate": "Start",
+    "endDate": "End",
+    "unschedule": "Remove from timeline",
+    "dependsOn": "Can only start when",
+    "noDependencies": "No dependencies — this feature can start at any time.",
+    "dependsOnItem": "“{{pbi}}” ({{feature}}) is done",
+    "conflictNote": "Planned to start before this is finished",
+    "unplannedNote": "Not on the timeline yet",
+    "addDependency": "+ Add dependency…",
+    "blocks": "Other features wait on this",
+    "blocksItem": "{{feature}} waits on “{{pbi}}”"
   },
   "projectSelect": {
     "subtitle": "Pick a project to work on.",
     "empty": "No projects yet — create your first one.",
     "newProject": "+ New project"
   },
-  "userSelect": {
-    "subtitle": "Who is working on the renovation today?",
-    "empty": "No users yet — add yourself below.",
-    "addPlaceholder": "Add a new user…",
-    "switchProject": "← Switch project"
+  "login": {
+    "subtitle": "Sign in to continue.",
+    "namePlaceholder": "Name",
+    "passwordPlaceholder": "Password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "setupSubtitle": "Welcome! Create the first (admin) account to get started.",
+    "createAdmin": "Create account",
+    "setupDone": "Account \"{{name}}\" created. This is your password:",
+    "passwordOnce": "It is shown only once — store it somewhere safe.",
+    "continueToLogin": "Continue to sign in",
+    "downloadCertificate": "Download the Renovatie certificate",
+    "certificateHelp": "Install it as a trusted root certificate, then reload this page. Verify its fingerprint with your administrator first."
   },
   "sidebar": {
     "filters": "Filters",
@@ -211,7 +250,8 @@
     "addUserPlaceholder": "Add new user…",
     "creating": "Creating…",
     "createProject": "Create project",
-    "createError": "Could not create the project"
+    "createError": "Could not create the project",
+    "userPasswords": "Generated passwords for the new users — they are shown only once:"
   },
   "config": {
     "project": "Project",
@@ -240,6 +280,15 @@
     "featurePbisNote_one": " {{count}} work item will keep existing without a feature.",
     "featurePbisNote_other": " {{count}} work items will keep existing without a feature.",
     "confirmRemoveMember": "Remove {{name}} from this project? Their assignments in this project will be cleared.",
-    "confirmDeleteUser": "Delete {{name}} everywhere? They will be removed from all projects and unassigned from all work."
+    "confirmDeleteUser": "Delete {{name}} everywhere? They will be removed from all projects and unassigned from all work.",
+    "userCreated": "User {{name}} created. Their password (shown only once):\n\n{{password}}",
+    "resetPassword": "Reset password",
+    "confirmResetPassword": "Give {{name}} a new random password? The old one stops working immediately.",
+    "passwordResetDone": "New password for {{name}} (shown only once):\n\n{{password}}",
+    "account": "Account",
+    "currentPassword": "Current password",
+    "newPassword": "New password (min. 8 characters)",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed."
   }
 }

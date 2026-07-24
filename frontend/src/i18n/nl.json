@@ -44,7 +44,8 @@
   },
   "app": {
     "switchProject": "Wissel van project",
-    "switchUser": "Wissel van gebruiker",
+    "logout": "Uitloggen",
+    "confirmLogout": "Uitloggen?",
     "newPbi": "+ Nieuwe Klus",
     "projectSettings": "Projectinstellingen",
     "welcome": "Welkom bij {{name}}",
@@ -53,19 +54,57 @@
   "nav": {
     "board": "Bord",
     "backlog": "Klussenlijst",
+    "timeline": "Tijdlijn",
     "dashboard": "Dashboard",
     "costs": "Kosten"
+  },
+  "timeline": {
+    "title": "Tijdlijn",
+    "zoomLabel": "Zoomniveau",
+    "zoom": {
+      "week": "Weken",
+      "month": "Maanden",
+      "quarter": "Kwartalen"
+    },
+    "today": "Vandaag",
+    "weekNumber": "wk {{week}}",
+    "noFeatures": "Nog geen features",
+    "noFeaturesHint": "Maak features aan in de projectinstellingen (⚙ rechtsboven) en plan ze daarna hier in.",
+    "unscheduled": "Nog niet op de tijdlijn",
+    "plan": "Inplannen",
+    "progressTip": "{{done}}/{{total}} klaar",
+    "conflictBadge": "Start voordat een afhankelijkheid klaar is",
+    "openFeature": "Feature openen",
+    "startDate": "Start",
+    "endDate": "Einde",
+    "unschedule": "Van tijdlijn verwijderen",
+    "dependsOn": "Kan pas starten als",
+    "noDependencies": "Geen afhankelijkheden — deze feature kan altijd starten.",
+    "dependsOnItem": "“{{pbi}}” ({{feature}}) klaar is",
+    "conflictNote": "Staat gepland vóór dit af is",
+    "unplannedNote": "Nog niet op de tijdlijn",
+    "addDependency": "+ Afhankelijkheid toevoegen…",
+    "blocks": "Andere features wachten hierop",
+    "blocksItem": "{{feature}} wacht op “{{pbi}}”"
   },
   "projectSelect": {
     "subtitle": "Kies een project om aan te werken.",
     "empty": "Nog geen projecten — maak je eerste aan.",
     "newProject": "+ Nieuw project"
   },
-  "userSelect": {
-    "subtitle": "Wie werkt er vandaag aan de verbouwing?",
-    "empty": "Nog geen gebruikers — voeg jezelf hieronder toe.",
-    "addPlaceholder": "Nieuwe gebruiker toevoegen…",
-    "switchProject": "← Wissel van project"
+  "login": {
+    "subtitle": "Log in om verder te gaan.",
+    "namePlaceholder": "Naam",
+    "passwordPlaceholder": "Wachtwoord",
+    "signIn": "Inloggen",
+    "signingIn": "Inloggen…",
+    "setupSubtitle": "Welkom! Maak het eerste (beheerders)account aan om te beginnen.",
+    "createAdmin": "Account aanmaken",
+    "setupDone": "Account \"{{name}}\" aangemaakt. Dit is je wachtwoord:",
+    "passwordOnce": "Het wordt maar één keer getoond — bewaar het goed.",
+    "continueToLogin": "Verder naar inloggen",
+    "downloadCertificate": "Renovatie-certificaat downloaden",
+    "certificateHelp": "Installeer het als vertrouwd basiscertificaat en laad deze pagina daarna opnieuw. Controleer eerst de vingerafdruk bij je beheerder."
   },
   "sidebar": {
     "filters": "Filters",
@@ -211,7 +250,8 @@
     "addUserPlaceholder": "Nieuwe gebruiker toevoegen…",
     "creating": "Aanmaken…",
     "createProject": "Project aanmaken",
-    "createError": "Kan het project niet aanmaken"
+    "createError": "Kan het project niet aanmaken",
+    "userPasswords": "Gegenereerde wachtwoorden voor de nieuwe gebruikers — ze worden maar één keer getoond:"
   },
   "config": {
     "project": "Project",
@@ -240,6 +280,15 @@
     "featurePbisNote_one": " {{count}} klus blijft bestaan zonder feature.",
     "featurePbisNote_other": " {{count}} klussen blijven bestaan zonder feature.",
     "confirmRemoveMember": "{{name}} uit dit project verwijderen? Hun toewijzingen in dit project worden gewist.",
-    "confirmDeleteUser": "{{name}} overal verwijderen? Deze gebruiker wordt uit alle projecten verwijderd en van al het werk afgehaald."
+    "confirmDeleteUser": "{{name}} overal verwijderen? Deze gebruiker wordt uit alle projecten verwijderd en van al het werk afgehaald.",
+    "userCreated": "Gebruiker {{name}} aangemaakt. Het wachtwoord (wordt maar één keer getoond):\n\n{{password}}",
+    "resetPassword": "Wachtwoord resetten",
+    "confirmResetPassword": "{{name}} een nieuw willekeurig wachtwoord geven? Het oude werkt daarna niet meer.",
+    "passwordResetDone": "Nieuw wachtwoord voor {{name}} (wordt maar één keer getoond):\n\n{{password}}",
+    "account": "Account",
+    "currentPassword": "Huidig wachtwoord",
+    "newPassword": "Nieuw wachtwoord (min. 8 tekens)",
+    "changePassword": "Wachtwoord wijzigen",
+    "passwordChanged": "Wachtwoord gewijzigd."
   }
 }

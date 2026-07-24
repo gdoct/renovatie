@@ -81,12 +81,15 @@ On Windows with Node living in WSL, launch the bridge through `wsl.exe`:
       "command": "wsl.exe",
       "args": [
         "-e", "bash", "-c",
-        "NODE_EXTRA_CA_CERTS=/home/<user>/renovatie/tls/ca.crt exec npx -y mcp-remote https://<host>:8443/api/mcp"
+        "export NODE_EXTRA_CA_CERTS=/home/<user>/renovatie/tls/ca.crt; . \"$HOME/.nvm/nvm.sh\"; exec npx -y mcp-remote https://<host>:8443/api/mcp"
       ]
     }
   }
 }
 ```
+
+(`wsl.exe` spawns a bare non-login shell, so nvm-managed Node is not on PATH — hence sourcing
+`nvm.sh` first. With a system-wide Node in WSL, plain `npx` works without it.)
 
 Note: the Microsoft Store version of Claude Desktop does **not** read
 `%APPDATA%\Claude\claude_desktop_config.json` — its config lives inside the package sandbox at
@@ -113,6 +116,7 @@ Read tools:
 - `list_pbis` — work items with their tasks and costs, filterable by room/feature/status
 - `get_pbi` — one work item incl. tasks, costs, and comments
 - `cost_summary` — estimated/actual totals, overall and per room
+- `list_feature_dependencies` — timeline constraints ("feature X can only start once PBI Y is done")
 - `list_comments`
 
 Write tools:
@@ -121,6 +125,8 @@ Write tools:
 - `create_task`, `update_task`
 - `create_cost`, `update_cost`
 - `create_room`, `create_feature`, `add_comment`
+- `update_feature` — rename/describe a feature or plan it on the timeline (`start_date`/`end_date`)
+- `add_feature_dependency`, `remove_feature_dependency`
 
 All domain rules from the REST API apply identically — the tools call the same code. In
 particular, `delete_pbi` is the app's soft delete (reversible by setting a status again), and
@@ -137,11 +143,13 @@ Example prompts:
 
 ## Security
 
-**The MCP endpoint has no authentication**, matching the rest of the app ("intended for your
-trusted home network"). Anyone who can reach the port can read and modify board data through
-it. Keep it LAN-only (or tailnet-only); do not port-forward or tunnel it to the public internet
-as-is. Adding an auth layer (a bearer token check, or an authenticating proxy such as
-Cloudflare Access) is a prerequisite for exposing it to claude.ai or the mobile app.
+**The MCP endpoint has no authentication.** The REST API and web app require a login (JWT),
+but MCP clients (Claude Desktop/Code) have no login flow, so `/api/mcp` deliberately bypasses
+it — its trust boundary is the network. Anyone who can reach the port can read and modify
+board data through it. Keep it LAN-only (or tailnet-only); do not port-forward or tunnel it to
+the public internet as-is. Adding an auth layer (a static bearer token check, or an
+authenticating proxy such as Cloudflare Access) is a prerequisite for exposing it to claude.ai
+or the mobile app.
 
 ## Development notes
 

@@ -49,8 +49,9 @@ mcp = FastMCP(
     streamable_http_path="/",
     # The SDK's DNS-rebinding protection only accepts localhost Host headers by
     # default, which rejects LAN/reverse-proxied access (e.g. nuc-guido:8443).
-    # The REST API on this server is equally unauthenticated with open CORS, so
-    # Host pinning here adds no protection — the trust boundary is the network.
+    # NOTE: unlike the REST API (JWT-protected), this MCP endpoint is
+    # deliberately unauthenticated — MCP clients (Claude Desktop/Code) have no
+    # login flow, so its trust boundary remains the network. Keep it LAN-only.
     transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
 )
 
@@ -107,10 +108,22 @@ def list_rooms(project_id: int) -> list[dict[str, Any]]:
 
 @mcp.tool()
 def list_features(project_id: int) -> list[dict[str, Any]]:
-    """List the features of a project (cross-room themes like 'plumbing').
-    Use this to resolve a feature name to a feature_id."""
+    """List the features of a project (cross-room themes like 'plumbing'),
+    including their timeline planning window (start_date/end_date, null when
+    unscheduled). Use this to resolve a feature name to a feature_id."""
     with db_session() as db:
         return [dump(schemas.FeatureRead, f) for f in features_router.list_features(db, project_id)]
+
+
+@mcp.tool()
+def list_feature_dependencies(project_id: int) -> list[dict[str, Any]]:
+    """List the timeline dependencies of a project. Each row means: the feature
+    (feature_id) can only start once the PBI (depends_on_pbi_id) is done."""
+    with db_session() as db:
+        return [
+            dump(schemas.FeatureDependencyRead, d)
+            for d in features_router.list_dependencies(db, project_id)
+        ]
 
 
 @mcp.tool()
@@ -347,6 +360,46 @@ def create_feature(project_id: int, name: str, description: str = "") -> dict[st
     with db_session() as db:
         payload = schemas.FeatureCreate(name=name, project_id=project_id, description=description)
         return dump(schemas.FeatureRead, features_router.create_feature(payload, db))
+
+
+@mcp.tool()
+def update_feature(
+    feature_id: int,
+    name: str | None = None,
+    description: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict[str, Any]:
+    """Update a feature; only the fields you pass are changed (fields cannot be
+    cleared to null with this tool). Dates are ISO strings (YYYY-MM-DD) and
+    schedule the feature on the timeline."""
+    with db_session() as db:
+        payload = schemas.FeatureUpdate(
+            **changes(name=name, description=description, start_date=start_date, end_date=end_date)
+        )
+        return dump(schemas.FeatureRead, features_router.update_feature(feature_id, payload, db))
+
+
+@mcp.tool()
+def add_feature_dependency(feature_id: int, depends_on_pbi_id: int) -> dict[str, Any]:
+    """Add a timeline dependency: the feature can only start once the given PBI
+    (of another feature) is done. The timeline shows it as an arrow and flags
+    schedule conflicts."""
+    with db_session() as db:
+        payload = schemas.FeatureDependencyCreate(depends_on_pbi_id=depends_on_pbi_id)
+        return dump(
+            schemas.FeatureDependencyRead,
+            features_router.add_dependency(feature_id, payload, db),
+        )
+
+
+@mcp.tool()
+def remove_feature_dependency(feature_id: int, dependency_id: int) -> str:
+    """Remove a timeline dependency from a feature (see
+    list_feature_dependencies for ids)."""
+    with db_session() as db:
+        features_router.remove_dependency(feature_id, dependency_id, db)
+        return f"Dependency {dependency_id} removed."
 
 
 @mcp.tool()

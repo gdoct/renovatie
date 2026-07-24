@@ -77,6 +77,22 @@ export function ProjectConfig({
     void run(() => api.removeProjectUser(project.id, user.id))
   }
 
+  const createMember = (name: string) =>
+    run(async () => {
+      const user = await api.createUser(name)
+      await api.addProjectUser(project.id, user.id)
+      // The generated password exists only in this response — show it now.
+      window.alert(t('config.userCreated', { name: user.name, password: user.password }))
+    })
+
+  const resetPassword = (user: User) => {
+    if (!window.confirm(t('config.confirmResetPassword', { name: user.name }))) return
+    void run(async () => {
+      const { password } = await api.resetPassword(user.id)
+      window.alert(t('config.passwordResetDone', { name: user.name, password }))
+    })
+  }
+
   const deleteUser = (user: User) => {
     if (!window.confirm(t('config.confirmDeleteUser', { name: user.name }))) return
     void run(() => api.deleteUser(user.id))
@@ -242,6 +258,11 @@ export function ProjectConfig({
                 <button type="button" className="small" onClick={() => removeMember(user)}>
                   {t('config.removeFromProject')}
                 </button>
+                {(currentUser.is_admin || user.id === currentUser.id) && (
+                  <button type="button" className="small" onClick={() => resetPassword(user)}>
+                    {t('config.resetPassword')}
+                  </button>
+                )}
                 {currentUser.is_admin && (
                   <button type="button" className="danger small" onClick={() => deleteUser(user)}>
                     {t('config.deleteUser')}
@@ -268,15 +289,12 @@ export function ProjectConfig({
               </select>
             </div>
           )}
-          <AddForm
-            placeholder={t('config.createUserPlaceholder')}
-            onAdd={(name) =>
-              run(async () => {
-                const user = await api.createUser(name)
-                await api.addProjectUser(project.id, user.id)
-              })
-            }
-          />
+          <AddForm placeholder={t('config.createUserPlaceholder')} onAdd={createMember} />
+        </section>
+
+        <section className="config-section">
+          <h2>{t('config.account')}</h2>
+          <ChangePasswordForm />
         </section>
 
         {currentUser.is_admin && (
@@ -308,6 +326,53 @@ export function ProjectConfig({
         )}
       </div>
     </div>
+  )
+}
+
+// Change the logged-in user's own password; server verifies the current one.
+function ChangePasswordForm() {
+  const { t } = useTranslation()
+  const [current, setCurrent] = useState('')
+  const [next, setNext] = useState('')
+  const [message, setMessage] = useState<string | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    setMessage(null)
+    try {
+      await api.changePassword(current, next)
+      setCurrent('')
+      setNext('')
+      setFailed(false)
+      setMessage(t('config.passwordChanged'))
+    } catch (e) {
+      setFailed(true)
+      setMessage(e instanceof Error ? e.message : t('errors.generic'))
+    }
+  }
+
+  return (
+    <form className="add-form" onSubmit={(e) => void submit(e)}>
+      <input
+        type="password"
+        value={current}
+        placeholder={t('config.currentPassword')}
+        autoComplete="current-password"
+        onChange={(e) => setCurrent(e.target.value)}
+      />
+      <input
+        type="password"
+        value={next}
+        placeholder={t('config.newPassword')}
+        autoComplete="new-password"
+        onChange={(e) => setNext(e.target.value)}
+      />
+      <button type="submit" disabled={!current || next.length < 8}>
+        {t('config.changePassword')}
+      </button>
+      {message && <span className={failed ? 'wizard-error' : 'muted'}>{message}</span>}
+    </form>
   )
 }
 

@@ -82,7 +82,8 @@ EOF
 echo "==> Waiting for the app to come up ..."
 for i in {1..15}; do
   if ssh "$HOST" "curl -fsS http://localhost:$PORT/api/" >/dev/null 2>&1; then
-    echo "Deployed: http://$HOST:$PORT/"
+    echo "==> Configuring HTTPS and the client CA download ..."
+    ./setup-https.sh
     exit 0
   fi
   sleep 1

@@ -9,6 +9,8 @@ dependencies = [
     "sqlalchemy>=2.0",
     "python-multipart>=0.0.9",
     "mcp>=1.28.1",
+    "pyjwt>=2.8",
+    "bcrypt>=4.1",
 ]
 
 [dependency-groups]

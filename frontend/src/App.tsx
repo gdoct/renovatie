@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { Feature, PBI, Project, Room, Status, User } from './api'
-import { api, roomScope } from './api'
+import type { Feature, FeatureDependency, PBI, Project, Room, Status, User } from './api'
+import { api, hasToken, roomScope } from './api'
 import { Backlog } from './components/Backlog'
 import { LanguageToggle } from './components/LanguageToggle'
+import { Login } from './components/Login'
 import { Board } from './components/Board'
 import { CostDashboard } from './components/CostDashboard'
 import { CostModal } from './components/CostModal'
@@ -17,10 +18,9 @@ import { ProjectSelect } from './components/ProjectSelect'
 import { Sidebar } from './components/Sidebar'
 import type { AssigneeFilter } from './components/Sidebar'
 import { TaskModal } from './components/TaskModal'
-import { UserSelect } from './components/UserSelect'
+import { Timeline } from './components/Timeline'
 import './App.css'
 
-const CURRENT_USER_KEY = 'renovatie.currentUserId'
 const CURRENT_PROJECT_KEY = 'renovatie.currentProjectId'
 const SIDEBAR_OPEN_KEY = 'renovatie.sidebarOpen'
 
@@ -31,10 +31,13 @@ function App() {
   const [features, setFeatures] = useState<Feature[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [pbis, setPbis] = useState<PBI[]>([])
+  const [featureDeps, setFeatureDeps] = useState<FeatureDependency[]>([])
   const [roomFilter, setRoomFilter] = useState<number[]>([])
   const [featureFilter, setFeatureFilter] = useState<number[]>([])
   const [assigneeFilter, setAssigneeFilter] = useState<AssigneeFilter[]>([])
-  const [view, setView] = useState<'board' | 'backlog' | 'dashboard' | 'costs'>('board')
+  const [view, setView] = useState<'board' | 'backlog' | 'timeline' | 'dashboard' | 'costs'>(
+    'board',
+  )
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const stored = localStorage.getItem(SIDEBAR_OPEN_KEY)
     return stored === null ? true : stored === 'true'
@@ -48,22 +51,29 @@ function App() {
   const [showConfig, setShowConfig] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
-  const [currentUserId, setCurrentUserId] = useState<number | null>(() => {
-    const stored = localStorage.getItem(CURRENT_USER_KEY)
-    return stored === null ? null : Number(stored)
-  })
+  // null while the stored token is being validated against /auth/me.
+  const [authChecked, setAuthChecked] = useState(!hasToken())
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [currentProjectId, setCurrentProjectId] = useState<number | null>(() => {
     const stored = localStorage.getItem(CURRENT_PROJECT_KEY)
     return stored === null ? null : Number(stored)
   })
 
-  const selectUser = useCallback((user: User | null) => {
-    setCurrentUserId(user?.id ?? null)
-    if (user) {
-      localStorage.setItem(CURRENT_USER_KEY, String(user.id))
-    } else {
-      localStorage.removeItem(CURRENT_USER_KEY)
-    }
+  // Restore the session from a stored token; an invalid/expired token is
+  // cleared inside api.request (401 handler) and we land on the login screen.
+  useEffect(() => {
+    if (!hasToken()) return
+    api
+      .me()
+      .then(setCurrentUser)
+      .catch(() => api.logout())
+      .finally(() => setAuthChecked(true))
+  }, [])
+
+  const logout = useCallback(() => {
+    api.logout()
+    setCurrentUser(null)
+    setLoaded(false)
   }, [])
 
   const selectProject = useCallback((project: Project | null) => {
@@ -88,25 +98,28 @@ function App() {
     if (currentProjectId === null || !projectList.some((p) => p.id === currentProjectId)) {
       return
     }
-    const [roomList, featureList, userList, pbiList] = await Promise.all([
+    const [roomList, featureList, userList, pbiList, depList] = await Promise.all([
       api.listRooms(currentProjectId),
       api.listFeatures(currentProjectId),
       api.listProjectUsers(currentProjectId),
       api.listPbis(currentProjectId),
+      api.listFeatureDependencies(currentProjectId),
     ])
     setRooms(roomList)
     setFeatures(featureList)
     setUsers(userList)
     setPbis(pbiList)
+    setFeatureDeps(depList)
   }, [currentProjectId])
 
   useEffect(() => {
+    if (currentUser === null) return
     refresh()
       .then(() => setLoaded(true))
       .catch((e: unknown) =>
         setError(e instanceof Error ? e.message : t('errors.backendUnreachable')),
       )
-  }, [refresh, t])
+  }, [refresh, t, currentUser])
 
   const run = useCallback(
     async (action: () => Promise<unknown>) => {
@@ -143,6 +156,16 @@ function App() {
       void run(() =>
         api.updatePbi(pbiId, priority === undefined ? { status } : { status, priority }),
       )
+    },
+    [run],
+  )
+
+  const scheduleFeature = useCallback(
+    (featureId: number, start: string | null, end: string | null) => {
+      setFeatures((current) =>
+        current.map((f) => (f.id === featureId ? { ...f, start_date: start, end_date: end } : f)),
+      )
+      void run(() => api.updateFeature(featureId, { start_date: start, end_date: end }))
     },
     [run],
   )
@@ -187,22 +210,11 @@ function App() {
   const currentProject =
     currentProjectId === null ? null : (projects.find((p) => p.id === currentProjectId) ?? null)
 
-  const currentUser =
-    currentUserId === null ? null : (users.find((u) => u.id === currentUserId) ?? null)
-
   useEffect(() => {
     if (loaded && currentProjectId !== null && !projects.some((p) => p.id === currentProjectId)) {
       selectProject(null)
     }
   }, [loaded, projects, currentProjectId, selectProject])
-
-  // Also clears the stored user when they are not a member of the selected
-  // project, since `users` holds that project's members.
-  useEffect(() => {
-    if (loaded && currentUserId !== null && !users.some((u) => u.id === currentUserId)) {
-      selectUser(null)
-    }
-  }, [loaded, users, currentUserId, selectUser])
 
   useEffect(() => {
     if (
@@ -229,6 +241,25 @@ function App() {
       </button>
     </div>
   )
+
+  if (!authChecked) {
+    return (
+      <div className="app">
+        <p className="loading">{t('common.loading')}</p>
+      </div>
+    )
+  }
+
+  if (currentUser === null) {
+    return (
+      <Login
+        onLogin={(user) => {
+          setError(null)
+          setCurrentUser(user)
+        }}
+      />
+    )
+  }
 
   if (!loaded) {
     return (
@@ -263,28 +294,6 @@ function App() {
             onClose={() => setShowWizard(false)}
           />
         )}
-      </>
-    )
-  }
-
-  if (currentUser === null) {
-    return (
-      <>
-        {errorBanner}
-        <UserSelect
-          projectName={currentProject.name}
-          users={users}
-          onSelect={selectUser}
-          onCreate={(name) =>
-            void run(async () => {
-              const user = await api.createUser(name)
-              await api.addProjectUser(currentProject.id, user.id)
-              await refresh()
-              selectUser(user)
-            })
-          }
-          onBack={() => selectProject(null)}
-        />
       </>
     )
   }
@@ -333,6 +342,13 @@ function App() {
           </button>
           <button
             type="button"
+            className={view === 'timeline' ? 'active' : ''}
+            onClick={() => setView('timeline')}
+          >
+            {t('nav.timeline')}
+          </button>
+          <button
+            type="button"
             className={view === 'dashboard' ? 'active' : ''}
             onClick={() => setView('dashboard')}
           >
@@ -351,8 +367,10 @@ function App() {
           <button
             type="button"
             className="current-user"
-            title={t('app.switchUser')}
-            onClick={() => selectUser(null)}
+            title={t('app.logout')}
+            onClick={() => {
+              if (window.confirm(t('app.confirmLogout'))) logout()
+            }}
           >
             <span className="avatar">{currentUser.name.charAt(0).toUpperCase()}</span>
             <span className="current-user-name">{currentUser.name}</span>
@@ -392,6 +410,20 @@ function App() {
           pbis={pbis}
           onToggleCost={toggleCost}
           onSelectCost={setSelectedCostId}
+        />
+      ) : view === 'timeline' ? (
+        <Timeline
+          features={features}
+          pbis={pbis}
+          dependencies={featureDeps}
+          onSchedule={scheduleFeature}
+          onAddDependency={(featureId, pbiId) =>
+            run(() => api.createFeatureDependency(featureId, pbiId))
+          }
+          onRemoveDependency={(featureId, dependencyId) =>
+            run(() => api.deleteFeatureDependency(featureId, dependencyId))
+          }
+          onOpenFeature={setSelectedFeatureId}
         />
       ) : (
         <div className="layout">

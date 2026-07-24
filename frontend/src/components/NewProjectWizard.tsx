@@ -89,9 +89,15 @@ export function NewProjectWizard({ onDone, onClose }: NewProjectWizardProps) {
       for (const userId of selectedUserIds) {
         await api.addProjectUser(project.id, userId)
       }
+      const createdPasswords: string[] = []
       for (const userName of newUsers) {
         const user = await api.createUser(userName)
         await api.addProjectUser(project.id, user.id)
+        createdPasswords.push(`${user.name}: ${user.password}`)
+      }
+      // Generated passwords are only returned at creation — show them once.
+      if (createdPasswords.length > 0) {
+        window.alert(`${t('wizard.userPasswords')}\n\n${createdPasswords.join('\n')}`)
       }
       onDone(project)
     } catch (e) {

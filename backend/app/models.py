@@ -1,6 +1,17 @@
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table, Text, func
+from sqlalchemy import (
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -32,6 +43,9 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
     is_admin: Mapped[bool] = mapped_column(default=False)
+    # bcrypt hash; empty only transiently for pre-auth rows until migrate()
+    # backfills them (see backfill_passwords in main.py).
+    password_hash: Mapped[str] = mapped_column(String(100), default="")
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="assignee")
     pbis: Mapped[list["PBI"]] = relationship(back_populates="assignee")
@@ -67,10 +81,32 @@ class Feature(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
     description: Mapped[str] = mapped_column(Text, default="")
+    # Timeline planning window; both null means the feature is unscheduled.
+    start_date: Mapped[date | None] = mapped_column(Date, default=None)
+    end_date: Mapped[date | None] = mapped_column(Date, default=None)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"))
 
     project: Mapped[Project] = relationship(back_populates="features")
     pbis: Mapped[list["PBI"]] = relationship(back_populates="feature")
+    dependencies: Mapped[list["FeatureDependency"]] = relationship(
+        back_populates="feature", cascade="all, delete-orphan"
+    )
+
+
+class FeatureDependency(Base):
+    """Timeline constraint: the feature can only start once a specific PBI
+    (usually belonging to another feature) is done. Purely informational — the
+    schedule is never enforced, the timeline just flags conflicts."""
+
+    __tablename__ = "feature_dependencies"
+    __table_args__ = (UniqueConstraint("feature_id", "depends_on_pbi_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    feature_id: Mapped[int] = mapped_column(ForeignKey("features.id"))
+    depends_on_pbi_id: Mapped[int] = mapped_column(ForeignKey("pbis.id"))
+
+    feature: Mapped[Feature] = relationship(back_populates="dependencies")
+    depends_on_pbi: Mapped["PBI"] = relationship()
 
 
 class PBI(Base):

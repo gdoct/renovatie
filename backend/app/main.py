@@ -4,14 +4,16 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect, text
 
+from . import security
 from .database import Base, engine
+from .deps import get_current_user
 from .mcp_server import mcp
-from .routers import comments, costs, features, pbis, projects, rooms, tasks, users
+from .routers import auth, comments, costs, features, pbis, projects, rooms, tasks, users
 
 UPLOADS_DIR = Path(
     os.environ.get("UPLOADS_DIR", Path(__file__).resolve().parent.parent / "uploads")
@@ -31,6 +33,11 @@ MIGRATIONS: dict[str, dict[str, list[str]]] = {
         "is_admin": [
             "ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0",
             "UPDATE users SET is_admin = 1 WHERE id = 1",
+        ],
+        # bcrypt hashes cannot be computed in SQL; backfill_passwords() fills
+        # the empty hashes right after the SQL migrations run.
+        "password_hash": [
+            "ALTER TABLE users ADD COLUMN password_hash VARCHAR(100) NOT NULL DEFAULT ''",
         ],
     },
     "rooms": {
@@ -52,6 +59,8 @@ MIGRATIONS: dict[str, dict[str, list[str]]] = {
             "ALTER TABLE features ADD COLUMN project_id INTEGER REFERENCES projects(id)",
             "UPDATE features SET project_id = (SELECT min(id) FROM projects)",
         ],
+        "start_date": ["ALTER TABLE features ADD COLUMN start_date DATE"],
+        "end_date": ["ALTER TABLE features ADD COLUMN end_date DATE"],
     },
     "pbis": {
         "assignee_id": ["ALTER TABLE pbis ADD COLUMN assignee_id INTEGER REFERENCES users(id)"],
@@ -84,6 +93,20 @@ def migrate() -> None:
                 if column not in existing:
                     for statement in statements:
                         connection.execute(text(statement))
+    backfill_passwords()
+
+
+def backfill_passwords() -> None:
+    """Give users created before authentication existed their migration
+    password: their name + '1234' (they should change it after first login).
+    Idempotent — users created after the auth release always have a hash."""
+    with engine.begin() as connection:
+        rows = connection.execute(text("SELECT id, name FROM users WHERE password_hash = ''")).all()
+        for user_id, name in rows:
+            connection.execute(
+                text("UPDATE users SET password_hash = :hash WHERE id = :id"),
+                {"hash": security.hash_password(f"{name}1234"), "id": user_id},
+            )
 
 
 @asynccontextmanager
@@ -107,14 +130,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(projects.router)
-app.include_router(rooms.router)
-app.include_router(features.router)
-app.include_router(pbis.router)
-app.include_router(tasks.router)
-app.include_router(costs.router)
+# Everything except auth requires a valid JWT. The users router manages its
+# own protection per route (creating the very first user must work without a
+# token); the MCP mount below is not covered by FastAPI dependencies — see the
+# trust-model note in mcp_server.py.
+authenticated = [Depends(get_current_user)]
+
+app.include_router(auth.router)
+app.include_router(projects.router, dependencies=authenticated)
+app.include_router(rooms.router, dependencies=authenticated)
+app.include_router(features.router, dependencies=authenticated)
+app.include_router(pbis.router, dependencies=authenticated)
+app.include_router(tasks.router, dependencies=authenticated)
+app.include_router(costs.router, dependencies=authenticated)
 app.include_router(users.router)
-app.include_router(comments.router)
+app.include_router(comments.router, dependencies=authenticated)
 
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/images", StaticFiles(directory=UPLOADS_DIR), name="images")
@@ -123,7 +153,7 @@ app.mount("/images", StaticFiles(directory=UPLOADS_DIR), name="images")
 app.mount("/mcp", mcp.streamable_http_app())
 
 
-@app.post("/uploads", status_code=201)
+@app.post("/uploads", status_code=201, dependencies=authenticated)
 async def upload_image(file: UploadFile) -> dict[str, str]:
     extension = Path(file.filename or "").suffix.lower()
     if extension not in IMAGE_EXTENSIONS:

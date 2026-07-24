@@ -3,17 +3,25 @@
 Renovatie is a kanban-style project management tool inspired by Azure DevOps, tailored to
 house renovation projects. It helps organize work, track progress, and manage
 responsibilities across rooms, features, PBIs, and tasks. It is intended for personal use
-on a trusted network, so there is deliberately no authentication or security hardening.
+on a trusted network. The web app requires login (JWT bearer tokens, bcrypt-hashed
+passwords); the built-in MCP endpoint remains unauthenticated and relies on the network
+as its trust boundary.
 
 ## Domain model
 
 - **Project** — one renovation (e.g. "Renovatie 2026"). Rooms, features, and PBIs belong
   to a project. Users are global and are joined to projects; the first user ever created
-  is an admin and can manage projects and users.
+  is an admin and can manage projects and users. Users log in with their name and a
+  password; new users get a generated random password that is shown exactly once, and
+  admins (or the user themselves) can reset it. Accounts that predate authentication were
+  migrated with their name + "1234" as password.
 - **Room** — an area of the house. The room view shows all remaining PBIs for that room,
   making it easy to see what work is still outstanding in each area.
 - **Feature** — groups related PBIs so a larger renovation goal can be tracked as a
-  single unit of progress.
+  single unit of progress. A feature can be planned on the timeline with a start and end
+  date, and can declare dependencies: "can only start once PBI X (of another feature) is
+  done". Dependencies are informational — the timeline flags schedule conflicts but never
+  blocks changes.
 - **PBI** (product backlog item) — a renovation work item with a status, assignee,
   priority, and its associated tasks, costs, and comments.
 - **Task** — a unit of work within a PBI, assignable to a user, with its own status.
@@ -34,6 +42,10 @@ The frontend provides a sprint-board experience:
   columns, so the whole project can be ordered by priority
 - monitor progress by room and by feature, and track spending on the cost dashboard
 - assign users to PBIs and tasks and update status as work advances
+- plan features on the timeline: a Gantt chart with week/month/quarter views, drag to
+  move or resize a feature's planning window, progress shown inside each bar, and
+  dependency arrows that turn red when a feature is planned to start before the PBI it
+  waits on is finished
 
 It is a React + TypeScript single-page app built with Vite, talking to the backend REST
 API, and designed to be responsive so the board is usable from any device. Code quality

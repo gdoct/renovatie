@@ -21,13 +21,28 @@ export interface Feature {
   id: number
   name: string
   description: string
+  // ISO dates (YYYY-MM-DD); both null while the feature is unscheduled.
+  start_date: string | null
+  end_date: string | null
   project_id: number
+}
+
+// Timeline constraint: the feature can only start once the PBI is done.
+export interface FeatureDependency {
+  id: number
+  feature_id: number
+  depends_on_pbi_id: number
 }
 
 export interface User {
   id: number
   name: string
   is_admin: boolean
+}
+
+// Creation response: the generated password is only ever returned here, once.
+export interface UserCreated extends User {
+  password: string
 }
 
 export interface Task {
@@ -73,12 +88,38 @@ export interface Comment {
 }
 
 const API_BASE = '/api'
+const TOKEN_KEY = 'renovatie.token'
+
+let token: string | null = localStorage.getItem(TOKEN_KEY)
+
+export const hasToken = (): boolean => token !== null
+
+const setToken = (value: string) => {
+  token = value
+  localStorage.setItem(TOKEN_KEY, value)
+}
+
+export const clearToken = () => {
+  token = null
+  localStorage.removeItem(TOKEN_KEY)
+}
+
+const authHeaders = (): Record<string, string> =>
+  token === null ? {} : { Authorization: `Bearer ${token}` }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const hadToken = token !== null
   const response = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers: { 'Content-Type': 'application/json', ...authHeaders(), ...options?.headers },
   })
+  // 401 with a token attached means the session expired (or the user was
+  // deleted): drop the token and reload into the login screen. A 401 without
+  // a token (failed login attempt) surfaces as a normal error.
+  if (response.status === 401 && hadToken) {
+    clearToken()
+    window.location.reload()
+  }
   if (!response.ok) {
     let detail = response.statusText
     try {
@@ -93,7 +134,32 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return (await response.json()) as T
 }
 
+interface TokenResponse {
+  access_token: string
+  token_type: 'bearer'
+  user: User
+}
+
 export const api = {
+  setupStatus: () => request<{ needs_setup: boolean }>('/auth/setup'),
+  login: async (name: string, password: string): Promise<User> => {
+    const response = await request<TokenResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ name, password }),
+    })
+    setToken(response.access_token)
+    return response.user
+  },
+  logout: () => clearToken(),
+  me: () => request<User>('/auth/me'),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<void>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    }),
+  resetPassword: (userId: number) =>
+    request<{ password: string }>(`/users/${userId}/password-reset`, { method: 'POST' }),
+
   listProjects: () => request<Project[]>('/projects'),
   createProject: (name: string) =>
     request<Project>('/projects', { method: 'POST', body: JSON.stringify({ name }) }),
@@ -126,13 +192,32 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ name, project_id: projectId, description }),
     }),
-  updateFeature: (id: number, payload: Partial<{ name: string; description: string }>) =>
-    request<Feature>(`/features/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+  updateFeature: (
+    id: number,
+    payload: Partial<{
+      name: string
+      description: string
+      start_date: string | null
+      end_date: string | null
+    }>,
+  ) => request<Feature>(`/features/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   deleteFeature: (id: number) => request<void>(`/features/${id}`, { method: 'DELETE' }),
+  listFeatureDependencies: (projectId: number) =>
+    request<FeatureDependency[]>(`/features/dependencies?project_id=${projectId}`),
+  createFeatureDependency: (featureId: number, pbiId: number) =>
+    request<FeatureDependency>(`/features/${featureId}/dependencies`, {
+      method: 'POST',
+      body: JSON.stringify({ depends_on_pbi_id: pbiId }),
+    }),
+  deleteFeatureDependency: (featureId: number, dependencyId: number) =>
+    request<void>(`/features/${featureId}/dependencies/${dependencyId}`, { method: 'DELETE' }),
 
   listUsers: () => request<User[]>('/users'),
   createUser: (name: string, isAdmin = false) =>
-    request<User>('/users', { method: 'POST', body: JSON.stringify({ name, is_admin: isAdmin }) }),
+    request<UserCreated>('/users', {
+      method: 'POST',
+      body: JSON.stringify({ name, is_admin: isAdmin }),
+    }),
   updateUser: (id: number, payload: Partial<{ name: string; is_admin: boolean }>) =>
     request<User>(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   deleteUser: (id: number) => request<void>(`/users/${id}`, { method: 'DELETE' }),
@@ -211,7 +296,11 @@ export const api = {
   uploadImage: async (file: File): Promise<string> => {
     const form = new FormData()
     form.append('file', file)
-    const response = await fetch(`${API_BASE}/uploads`, { method: 'POST', body: form })
+    const response = await fetch(`${API_BASE}/uploads`, {
+      method: 'POST',
+      body: form,
+      headers: authHeaders(),
+    })
     if (!response.ok) {
       let detail = response.statusText
       try {

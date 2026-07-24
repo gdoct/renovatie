@@ -13,7 +13,7 @@ Kanban-style project management for house renovation projects. See [SPEC.md](SPE
 * Progress at a glance: done/total counters per room and per feature in the sidebar (which doubles as a board filter), plus a dashboard with status and per-person workload charts
 * Backlog view for planning work that isn't on the board yet
 * Multiple projects with a new-project wizard; deleted items are soft-deleted so nothing is lost by accident
-* Multi-user without authentication — intended for your trusted home network
+* Multi-user with JWT authentication: log in with name + password, passwords stored bcrypt-hashed; new users receive a generated password (shown once), and admins can reset passwords
 * Built-in [MCP server](MCP.md): manage the board in natural language from Claude (Desktop/Code) — "add 'request painter quote' to the bathroom", "what has the bathroom cost so far?"
 * Available in English and Dutch
 * Responsive layout, so you can update the board from your phone while standing in the room you're renovating
@@ -63,6 +63,35 @@ Runtime configuration (environment variables):
 - `UPLOADS_DIR` — uploaded images directory (default `backend/uploads`; `/data/uploads` in the image)
 - `FRONTEND_DIST` — built frontend to serve (default `frontend/dist`; `/app/static` in the image)
 
+### HTTPS client setup
+
+`./setup-https.sh` creates a private Renovatie CA and makes its public
+certificate available at `https://<host>:8443/renovatie-ca.crt`. The sign-in
+page also links to that download. The CA private key remains only on the
+machine that runs the script and must never be copied to the server or shared.
+
+Users need to install the certificate once before their browser will trust the
+app. Send the SHA-256 fingerprint printed by `setup-https.sh` through a channel
+they already trust, and have them compare it before installing the download.
+Do not use an untrusted HTTP download to distribute a root CA.
+
+- **Windows:** Download the certificate, double-click it, select **Install
+	Certificate**, choose **Current User**, then **Trusted Root Certification
+	Authorities**. Alternatively: `certutil.exe -user -addstore Root renovatie-ca.crt`.
+- **macOS:** Open the certificate in Keychain Access, add it to the **System**
+	keychain, then open it and set **Trust** to **Always Trust**.
+- **Linux:** `sudo cp renovatie-ca.crt /usr/local/share/ca-certificates/renovatie-ca.crt && sudo update-ca-certificates`.
+- **iPhone/iPad:** Open the downloaded certificate, allow the profile download,
+	install it in **Settings > General > VPN & Device Management**, then enable
+	full trust in **Settings > General > About > Certificate Trust Settings**.
+- **Android:** Open the downloaded certificate and install it as a **CA
+	certificate** in Security settings. Android versions and managed devices vary;
+	some apps do not trust user-installed CAs.
+
+For organization-managed Windows, macOS, iOS, or Android devices, deploy the
+CA through the existing MDM/GPO profile instead. That is the scalable option and
+does not require users to interact with a browser warning.
+
 ## Using it from Claude (MCP)
 
 The backend exposes its tools over MCP at `/mcp` (development) or `/api/mcp` (Docker
@@ -77,7 +106,7 @@ For Claude Desktop, use the local `mcp-remote` bridge described in [MCP.md](MCP.
 Desktop's "custom connectors" are brokered by Anthropic's cloud and cannot reach LAN-only
 servers. `./setup-https.sh` provisions a local CA plus an nginx TLS proxy on the Docker
 host (port 8443) for encrypted, warning-free access. MCP.md also has the full tool list and
-security notes (the endpoint is unauthenticated, like the rest of the app — keep it on your
+security notes (unlike the REST API, the MCP endpoint is unauthenticated — keep it on your
 trusted network).
 
 ## Quality tooling

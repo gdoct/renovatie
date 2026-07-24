@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "renovatie": {
+      "type": "http",
+      "url": "https://nuc-guido:8443/api/mcp"
+    }
+  }
+}

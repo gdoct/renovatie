@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import selectinload
 
 from .. import models, schemas
@@ -47,6 +47,13 @@ def get_live_pbi_or_error(db: DbSession, pbi_id: int) -> models.PBI:
     return pbi
 
 
+def delete_dependencies_on(db: DbSession, pbi_id: int) -> None:
+    """Drop timeline dependencies that wait on this PBI; caller commits."""
+    db.execute(
+        delete(models.FeatureDependency).where(models.FeatureDependency.depends_on_pbi_id == pbi_id)
+    )
+
+
 def delete_pbi_cascade(db: DbSession, pbi: models.PBI) -> None:
     """Delete a PBI plus its own and its tasks'/costs' comments; caller commits."""
     for task in pbi.tasks:
@@ -54,6 +61,7 @@ def delete_pbi_cascade(db: DbSession, pbi: models.PBI) -> None:
     for cost in pbi.costs:
         delete_comments_for(db, "cost", cost.id)
     delete_comments_for(db, "pbi", pbi.id)
+    delete_dependencies_on(db, pbi.id)
     db.delete(pbi)
 
 
@@ -150,7 +158,9 @@ def update_pbi(pbi_id: int, payload: schemas.PBIUpdate, db: DbSession) -> models
 
 @router.delete("/{pbi_id}", status_code=204)
 def delete_pbi(pbi_id: int, db: DbSession) -> None:
-    """Soft delete: the PBI and its tasks/costs/comments are kept but hidden."""
+    """Soft delete: the PBI and its tasks/costs/comments are kept but hidden.
+    Timeline dependencies on it are dropped (they do not survive a restore)."""
     pbi = get_pbi_or_404(db, pbi_id)
     pbi.status = "deleted"
+    delete_dependencies_on(db, pbi.id)
     db.commit()

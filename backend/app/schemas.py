@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
@@ -42,6 +42,36 @@ class UserRead(BaseModel):
     is_admin: bool
 
 
+class UserCreated(UserRead):
+    """Creation response: the generated password is shown exactly once."""
+
+    password: str
+
+
+class LoginRequest(BaseModel):
+    name: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
+    user: UserRead
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class PasswordReset(BaseModel):
+    password: str
+
+
+class SetupStatus(BaseModel):
+    needs_setup: bool
+
+
 class RoomCreate(BaseModel):
     name: str
     project_id: int
@@ -69,11 +99,16 @@ class FeatureCreate(BaseModel):
     name: str
     project_id: int
     description: str = ""
+    start_date: date | None = None
+    end_date: date | None = None
 
 
 class FeatureUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
+    # Dates: absent = unchanged, null = unschedule.
+    start_date: date | None = None
+    end_date: date | None = None
 
 
 class FeatureRead(BaseModel):
@@ -82,7 +117,21 @@ class FeatureRead(BaseModel):
     id: int
     name: str
     description: str
+    start_date: date | None
+    end_date: date | None
     project_id: int
+
+
+class FeatureDependencyCreate(BaseModel):
+    depends_on_pbi_id: int
+
+
+class FeatureDependencyRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    feature_id: int
+    depends_on_pbi_id: int
 
 
 class TaskCreate(BaseModel):
